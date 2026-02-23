@@ -1,0 +1,7 @@
+/* Reset Vite defaults so the app fills the viewport edge-to-edge */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
