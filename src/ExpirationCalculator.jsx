@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Info, Calculator } from 'lucide-react';
+import { formatPHP } from './utils';
+import { testimonials } from './testimonials';
 
 // ─── NumericInput — local string state prevents "0 remains" on clear ─────────
 function NumericInput({ value, onChange, placeholder, className }) {
@@ -20,19 +24,31 @@ function NumericInput({ value, onChange, placeholder, className }) {
     />
   );
 }
-import { motion } from 'framer-motion';
-import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Info, Calculator } from 'lucide-react';
-import { formatPHP } from './utils';
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function ExpirationCalculator({ portfolioTotal = 0, onContactClick }) {
   const [currentAge,      setCurrentAge]      = useState(35);
   const [targetAge,       setTargetAge]       = useState(85);
-  const [startingCapital, setStartingCapital] = useState(3000000);
+  const [startingCapital, setStartingCapital] = useState(portfolioTotal > 0 ? portfolioTotal : 3000000);
   const [monthlyExpense,  setMonthlyExpense]  = useState(60000);
   const [inflationRate,   setInflationRate]   = useState(5);
   const [growthRate,      setGrowthRate]      = useState(6);
   const [showAdvanced,    setShowAdvanced]    = useState(false);
+  const manualOverride    = useRef(false);
+  const [testimonialIdx, setTestimonialIdx]   = useState(0);
+
+  // Auto-sync portfolio total → starting capital (unless user manually edited)
+  useEffect(() => {
+    if (portfolioTotal > 0 && !manualOverride.current) {
+      setStartingCapital(portfolioTotal);
+    }
+  }, [portfolioTotal]);
+
+  // Rotate testimonials every 5s
+  useEffect(() => {
+    const timer = setInterval(() => setTestimonialIdx((i) => (i + 1) % testimonials.length), 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   // ── Calculation ─────────────────────────────────────────────────────────────
   // Convert annual rates to monthly using compound formula
@@ -132,7 +148,7 @@ export default function ExpirationCalculator({ portfolioTotal = 0, onContactClic
               </div>
               <NumericInput
                 value={startingCapital}
-                onChange={(e) => setStartingCapital(Math.max(0, Number(e.target.value) || 0))}
+                onChange={(e) => { manualOverride.current = true; setStartingCapital(Math.max(0, Number(e.target.value) || 0)); }}
                 placeholder="e.g. 3000000"
                 className="w-full bg-white border border-stone-200 text-stone-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
               />
@@ -140,7 +156,7 @@ export default function ExpirationCalculator({ portfolioTotal = 0, onContactClic
               {portfolioTotal > 0 && (
                 <button
                   type="button"
-                  onClick={() => setStartingCapital(portfolioTotal)}
+                  onClick={() => { manualOverride.current = false; setStartingCapital(portfolioTotal); }}
                   className={`mt-2 w-full py-1.5 px-3 rounded-lg text-xs font-medium transition-colors border ${
                     startingCapital === portfolioTotal
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
@@ -333,6 +349,15 @@ export default function ExpirationCalculator({ portfolioTotal = 0, onContactClic
               <p className="text-amber-700 text-xs leading-relaxed">
                 A licensed PamilyaLab consultant can show you how to grow your savings faster and close the gap — for free.
               </p>
+              {/* Testimonial */}
+              <div className="py-2 min-h-[52px]">
+                <p className="text-stone-500 text-xs italic leading-relaxed">
+                  "{testimonials[testimonialIdx].quote}"
+                </p>
+                <p className="text-stone-400 text-[10px] mt-1 font-medium">
+                  — {testimonials[testimonialIdx].name}, {testimonials[testimonialIdx].age}, {testimonials[testimonialIdx].city}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={onContactClick}

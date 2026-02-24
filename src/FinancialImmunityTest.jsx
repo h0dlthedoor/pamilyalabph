@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldAlert, ShieldCheck, Activity, ChevronRight,
   Users, Shield, FlaskConical, Wallet, TrendingUp,
-  CheckCircle2,
+  CheckCircle2, User, Phone,
 } from 'lucide-react';
+import { supabase } from './lib/supabase';
+import { testimonials } from './testimonials';
 
 // ─── Question bank — Filipino-English, PH-context aware ──────────────────────
 const questions = [
@@ -54,7 +56,7 @@ const questions = [
     options: [
       { text: '3–6+ months ng buwanang gastos — naka-ipon sa cash o liquid savings', score: 20 },
       { text: 'About 1–3 months lang — konti pa lang ang naitabi', score: 12 },
-      { text: 'Wala pa — babala na kung may mangyari (less than 1 month)', score: 5 },
+      { text: 'Wala pa — bahala na kung may mangyari (less than 1 month)', score: 5 },
     ],
   },
   {
@@ -85,21 +87,52 @@ export default function FinancialImmunityTest({ onContactClick }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
+  const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [answers, setAnswers] = useState([]);
+  const [leadName, setLeadName] = useState('');
+  const [leadMobile, setLeadMobile] = useState('');
+  const [leadSaving, setLeadSaving] = useState(false);
+  const [testimonialIdx, setTestimonialIdx] = useState(0);
+
+  // Rotate testimonials every 5s
+  useEffect(() => {
+    const timer = setInterval(() => setTestimonialIdx((i) => (i + 1) % testimonials.length), 5000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleAnswer = (points, optionText) => {
     const next = score + points;
     setScore(next);
-    setAnswers([...answers, { q: questions[currentStep].category, a: optionText, pts: points }]);
+    const newAnswers = [...answers, { q: questions[currentStep].category, a: optionText, pts: points }];
+    setAnswers(newAnswers);
     if (currentStep < questions.length - 1) setCurrentStep(currentStep + 1);
-    else setShowResult(true);
+    else setShowLeadCapture(true); // Show lead capture instead of results
+  };
+
+  const saveLead = async (skip = false) => {
+    const finalScore = score;
+    if (!skip && leadName.trim()) {
+      setLeadSaving(true);
+      await supabase.from('quiz_leads').insert({
+        first_name: leadName.trim(),
+        mobile: leadMobile.trim() || null,
+        score: finalScore,
+        answers_json: answers,
+      }).catch(() => {});
+      setLeadSaving(false);
+    }
+    setShowLeadCapture(false);
+    setShowResult(true);
   };
 
   const handleRestart = () => {
     setCurrentStep(0);
     setScore(0);
     setShowResult(false);
+    setShowLeadCapture(false);
     setAnswers([]);
+    setLeadName('');
+    setLeadMobile('');
   };
 
   const getDiagnosis = () => {
@@ -147,7 +180,75 @@ export default function FinancialImmunityTest({ onContactClick }) {
 
         <div className="p-6 sm:p-8">
           <AnimatePresence mode="wait">
-            {!showResult ? (
+            {showLeadCapture ? (
+              <motion.div
+                key="lead-capture"
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -24 }}
+                transition={{ duration: 0.22 }}
+                className="space-y-6"
+              >
+                <div className="text-center pt-4 pb-2">
+                  <div className="w-16 h-16 rounded-full bg-amber-100 border-2 border-amber-200 flex items-center justify-center mx-auto mb-4">
+                    <FlaskConical className="w-8 h-8 text-amber-600" />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-stone-900 leading-tight mb-2">
+                    Handa na ang lab results mo!
+                  </h3>
+                  <p className="text-sm text-stone-500 max-w-md mx-auto leading-relaxed">
+                    Enter your details para ma-receive mo ang full report at personalized recommendations.
+                  </p>
+                </div>
+
+                <div className="space-y-3 max-w-sm mx-auto">
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                    <input
+                      type="text"
+                      value={leadName}
+                      onChange={(e) => setLeadName(e.target.value)}
+                      placeholder="First Name"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border-2 border-stone-200 text-stone-800 text-sm font-medium focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                    <input
+                      type="tel"
+                      value={leadMobile}
+                      onChange={(e) => setLeadMobile(e.target.value)}
+                      placeholder="Mobile Number (09XX-XXX-XXXX)"
+                      maxLength={11}
+                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-white border-2 border-stone-200 text-stone-800 text-sm font-medium focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="max-w-sm mx-auto space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => saveLead(false)}
+                    disabled={!leadName.trim() || leadSaving}
+                    className="cta-pulse w-full py-4 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-all duration-200 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:animate-none"
+                  >
+                    {leadSaving ? 'Saving...' : 'Ipakita ang Results'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => saveLead(true)}
+                    className="w-full py-2 text-sm text-stone-400 hover:text-stone-600 transition-colors"
+                  >
+                    Tingnan na lang ang results
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-stone-400 text-center">
+                  100% confidential. Your info is only used by your PamilyaLab advisor.
+                </p>
+              </motion.div>
+            ) : !showResult ? (
               <motion.div
                 key={currentStep}
                 initial={{ opacity: 0, x: 24 }}
@@ -266,6 +367,15 @@ export default function FinancialImmunityTest({ onContactClick }) {
                     </p>
                     <p className="text-amber-700 text-sm mt-1">
                       Book a free consultation with PamilyaLab — a licensed Pru Life UK advisor will walk you through your next steps.
+                    </p>
+                  </div>
+                  {/* Testimonial */}
+                  <div className="py-1 min-h-[52px]">
+                    <p className="text-stone-500 text-xs italic leading-relaxed">
+                      "{testimonials[testimonialIdx].quote}"
+                    </p>
+                    <p className="text-stone-400 text-[10px] mt-1 font-medium">
+                      — {testimonials[testimonialIdx].name}, {testimonials[testimonialIdx].age}, {testimonials[testimonialIdx].city}
                     </p>
                   </div>
                   <button

@@ -113,7 +113,7 @@ export default function App() {
                   Kris | PamilyaLab
                 </h1>
                 <p className="text-[10px] text-amber-500 tracking-widest uppercase font-mono leading-tight">
-                  Financial Pathology Laboratory
+                  Financial Health Laboratory
                 </p>
               </div>
               {!clientView && (

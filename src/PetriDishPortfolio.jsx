@@ -187,19 +187,24 @@ function getDiagnostic(specimenData) {
       iconColor: 'text-slate-400',
       summary: 'Submit specimen values to initiate financial culture analysis.',
       observations: [],
+      survivalDays: 0,
     };
   }
 
   const observations = [];
 
+  // "Ilang Araw" — emergency fund in days of family survival (₱60K/mo = ₱2K/day)
+  const dailyExpense = 2000;
+  const survivalDays = emergencyFund > 0 ? Math.floor(emergencyFund / dailyExpense) : 0;
+
   if (emergencyFund >= 360_000) {
-    observations.push({ ok: true,  text: 'Emergency culture covers ≥ 6 months of expenses.' });
+    observations.push({ ok: true,  text: `Emergency culture covers ≥ 6 months of expenses (${survivalDays} days).` });
   } else if (emergencyFund >= 180_000) {
-    observations.push({ ok: null,  text: 'Emergency culture ~3 months. Grow to ₱360K+.' });
+    observations.push({ ok: null,  text: `Emergency culture ~3 months (${survivalDays} days). Grow to ₱360K+.` });
   } else if (emergencyFund > 0) {
-    observations.push({ ok: false, text: 'Emergency culture below 3-month target. Prioritize.' });
+    observations.push({ ok: false, text: `Emergency culture = ${survivalDays} days only. Below 3-month target.` });
   } else {
-    observations.push({ ok: false, text: 'No emergency specimen. High exposure detected.' });
+    observations.push({ ok: false, text: 'No emergency specimen. 0 days of survival. High exposure.' });
   }
 
   if (healthCoverage >= 1_000_000) {
@@ -224,25 +229,25 @@ function getDiagnostic(specimenData) {
     status: 'CULTURE THRIVING',    statusColor: 'text-emerald-600',
     Icon: CheckCircle2,            iconColor:   'text-emerald-500',
     summary: 'All culture strains are healthy. Financial immune system fully active.',
-    observations,
+    observations, survivalDays,
   };
   if (good === 2) return {
     status: 'CULTURE STABLE',      statusColor: 'text-blue-600',
     Icon: CheckCircle2,            iconColor:   'text-blue-500',
     summary: 'Good growth with minor gaps. Target flagged specimens.',
-    observations,
+    observations, survivalDays,
   };
   if (good === 1) return {
     status: 'CULTURE AT RISK',     statusColor: 'text-amber-600',
     Icon: AlertCircle,             iconColor:   'text-amber-500',
     summary: 'Significant gaps detected. Family exposed to financial shocks.',
-    observations,
+    observations, survivalDays,
   };
   return {
     status: 'CULTURE CRITICAL',    statusColor: 'text-red-600',
     Icon: AlertTriangle,           iconColor:   'text-red-500',
     summary: 'Multiple deficiencies. Immediate intervention required.',
-    observations,
+    observations, survivalDays,
   };
 }
 
@@ -661,6 +666,33 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSa
               </p>
               <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{diagnostic.summary}</p>
             </div>
+
+            {/* Ilang Araw — Emergency Survival Counter */}
+            {diagnostic.survivalDays > 0 && (
+              <div className={`rounded-xl p-3.5 border flex items-center gap-3 ${
+                diagnostic.survivalDays >= 180 ? 'bg-emerald-50 border-emerald-200' :
+                diagnostic.survivalDays >= 90  ? 'bg-amber-50 border-amber-200' :
+                                                  'bg-red-50 border-red-200'
+              }`}>
+                <Clock className={`w-5 h-5 shrink-0 ${
+                  diagnostic.survivalDays >= 180 ? 'text-emerald-500' :
+                  diagnostic.survivalDays >= 90  ? 'text-amber-500' :
+                                                    'text-red-500'
+                }`} />
+                <div>
+                  <p className={`text-lg font-black font-mono ${
+                    diagnostic.survivalDays >= 180 ? 'text-emerald-700' :
+                    diagnostic.survivalDays >= 90  ? 'text-amber-700' :
+                                                      'text-red-700'
+                  }`}>
+                    {diagnostic.survivalDays} araw
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    Emergency fund survival · based on ₱60K/month expenses
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Culture observations */}
             {diagnostic.observations.length > 0 && (
