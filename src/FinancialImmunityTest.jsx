@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldAlert, ShieldCheck, Activity, ChevronRight,
   Users, Shield, FlaskConical, Wallet, TrendingUp,
-  CheckCircle2, User, Phone,
+  CheckCircle2, User, Phone, Download, Loader2,
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { testimonials } from './testimonials';
+import { downloadCardImage } from './shareCard';
 
 // ─── Question bank — Filipino-English, PH-context aware ──────────────────────
 const questions = [
@@ -93,6 +94,8 @@ export default function FinancialImmunityTest({ onContactClick }) {
   const [leadMobile, setLeadMobile] = useState('');
   const [leadSaving, setLeadSaving] = useState(false);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
+  const [generating, setGenerating] = useState(false);
+  const cardRef = useRef(null);
 
   // Rotate testimonials every 5s
   useEffect(() => {
@@ -137,6 +140,15 @@ export default function FinancialImmunityTest({ onContactClick }) {
     setAnswers([]);
     setLeadName('');
     setLeadMobile('');
+  };
+
+  const handleDownloadCard = async () => {
+    if (!cardRef.current) return;
+    setGenerating(true);
+    try {
+      await downloadCardImage(cardRef.current, 'pamilyalab-results.png');
+    } catch (_) {}
+    setGenerating(false);
   };
 
   const getDiagnosis = () => {
@@ -360,6 +372,17 @@ export default function FinancialImmunityTest({ onContactClick }) {
                   })}
                 </div>
 
+                {/* Download share card */}
+                <button
+                  type="button"
+                  onClick={handleDownloadCard}
+                  disabled={generating}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm bg-stone-900 text-white hover:bg-stone-700 transition-all disabled:opacity-50"
+                >
+                  {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  {generating ? 'Generating...' : 'I-download ang Results'}
+                </button>
+
                 {/* CTA */}
                 <div className="hidden md:block bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center space-y-4">
                   <div className="flex justify-center">
@@ -402,6 +425,88 @@ export default function FinancialImmunityTest({ onContactClick }) {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Hidden share card — rendered to PNG by html2canvas */}
+      {showResult && (
+        <div ref={cardRef} style={{
+          position: 'absolute', left: '-9999px', top: 0,
+          width: 1080, height: 1350, overflow: 'hidden',
+          background: 'linear-gradient(180deg, #1c1917 0%, #292524 100%)',
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          padding: '60px 70px',
+          display: 'flex', flexDirection: 'column',
+          color: '#fafaf9', boxSizing: 'border-box',
+        }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+            <p style={{ fontSize: 16, color: '#f59e0b', fontFamily: 'monospace', letterSpacing: 5, textTransform: 'uppercase', margin: 0 }}>
+              PamilyaLab
+            </p>
+            <p style={{ fontSize: 28, fontWeight: 800, color: '#fafaf9', margin: '8px 0 0' }}>
+              Financial Immunity Test
+            </p>
+          </div>
+
+          {/* Score badge */}
+          <div style={{
+            textAlign: 'center', margin: '0 auto 28px', padding: '24px 40px',
+            borderRadius: 20, width: '100%',
+            background: score >= 80 ? '#065f46' : score >= 50 ? '#92400e' : '#991b1b',
+          }}>
+            <p style={{ fontSize: 52, fontWeight: 900, margin: 0, color: '#fafaf9' }}>
+              {score} / {maxScore}
+            </p>
+            <p style={{ fontSize: 18, fontWeight: 700, margin: '4px 0 0', color: score >= 80 ? '#6ee7b7' : score >= 50 ? '#fde68a' : '#fca5a5' }}>
+              {dx.label}
+            </p>
+            <p style={{ fontSize: 13, margin: '4px 0 0', color: 'rgba(255,255,255,0.6)' }}>
+              {dx.sublabel}
+            </p>
+          </div>
+
+          {/* Answer rows */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <p style={{ fontSize: 12, fontFamily: 'monospace', letterSpacing: 3, textTransform: 'uppercase', color: '#a8a29e', margin: '0 0 4px' }}>
+              Your Answers
+            </p>
+            {answers.map((ans, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'flex-start', gap: 14,
+                padding: '12px 16px', borderRadius: 14,
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)',
+              }}>
+                <div style={{
+                  width: 16, height: 16, borderRadius: '50%', flexShrink: 0, marginTop: 3,
+                  background: ans.pts >= 18 ? '#10b981' : ans.pts >= 10 ? '#f59e0b' : '#ef4444',
+                }} />
+                <div>
+                  <p style={{ fontSize: 11, fontFamily: 'monospace', color: '#a8a29e', margin: 0, letterSpacing: 1 }}>
+                    {ans.q}
+                  </p>
+                  <p style={{ fontSize: 15, color: '#e7e5e4', margin: '2px 0 0', lineHeight: 1.4 }}>
+                    {ans.a}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 24, marginTop: 20, textAlign: 'center' }}>
+            <p style={{ fontSize: 13, color: '#a8a29e', margin: 0 }}>Take the test at</p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: '#f59e0b', margin: '4px 0 12px' }}>
+              pamilyasecureph.vercel.app
+            </p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#d6d3d1', margin: 0 }}>
+              Kris Jenelyn De Las Peñas
+            </p>
+            <p style={{ fontSize: 12, color: '#78716c', margin: '2px 0 0' }}>
+              Microbiologist · Pru Life UK Financial Advisor
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

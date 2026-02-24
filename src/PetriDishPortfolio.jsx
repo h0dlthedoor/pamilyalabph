@@ -1,10 +1,11 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Microscope, CheckCircle2, AlertCircle, AlertTriangle, Clock,
-  Dna, FlaskConical, Loader2, CloudOff, Download,
+  Dna, FlaskConical, Loader2, CloudOff, Download, Share2,
 } from 'lucide-react';
 import { formatPHP, formatShort } from './utils';
+import { downloadCardImage } from './shareCard';
 
 // ─── NumericInput — local string state prevents "0 remains" on clear ─────────
 function NumericInput({ value, onChange, className, placeholder, style, onFocus, onBlur }) {
@@ -511,6 +512,15 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, dbSt
   const diagnostic     = useMemo(() => getDiagnostic(specimenData), [specimenData]);
   const { Icon }       = diagnostic;
   const specimenMap    = Object.fromEntries(SPECIMENS.map((sp) => [sp.id, sp]));
+  const [generating, setGenerating] = useState(false);
+  const cardRef = useRef(null);
+
+  const handleShareCard = async () => {
+    if (!cardRef.current) return;
+    setGenerating(true);
+    try { await downloadCardImage(cardRef.current, 'pamilyalab-portfolio.png'); } catch (_) {}
+    setGenerating(false);
+  };
 
   const today = new Date().toLocaleDateString('en-PH', {
     year: 'numeric', month: 'short', day: '2-digit',
@@ -615,6 +625,14 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, dbSt
                 >
                   <Download className="w-3 h-3" />
                   Save as PDF
+                </button>
+                <button
+                  onClick={handleShareCard}
+                  disabled={generating || portfolioTotal === 0}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-all disabled:opacity-50"
+                >
+                  {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Share2 className="w-3 h-3" />}
+                  Mag-share
                 </button>
                 {dbStatus === 'saving' && (
                   <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin shrink-0" />
@@ -894,6 +912,117 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, dbSt
           </svg>
         </div>
       </div>
+
+      {/* Hidden share card — rendered to PNG by html2canvas */}
+      {!clientView && (
+        <div ref={cardRef} style={{
+          position: 'absolute', left: '-9999px', top: 0,
+          width: 1080, height: 1350, overflow: 'hidden',
+          background: 'linear-gradient(180deg, #1c1917 0%, #292524 100%)',
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          padding: '60px 70px',
+          display: 'flex', flexDirection: 'column',
+          color: '#fafaf9', boxSizing: 'border-box',
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: 36 }}>
+            <p style={{ fontSize: 16, color: '#f59e0b', fontFamily: 'monospace', letterSpacing: 5, textTransform: 'uppercase', margin: 0 }}>
+              PamilyaLab
+            </p>
+            <p style={{ fontSize: 28, fontWeight: 800, color: '#fafaf9', margin: '8px 0 0' }}>
+              Portfolio Snapshot
+            </p>
+            <p style={{ fontSize: 14, color: '#78716c', margin: '6px 0 0' }}>{today}</p>
+          </div>
+
+          <div style={{
+            textAlign: 'center', marginBottom: 32, padding: '24px 40px',
+            borderRadius: 20, background: 'rgba(245,158,11,0.12)',
+            border: '1px solid rgba(245,158,11,0.25)',
+          }}>
+            <p style={{ fontSize: 14, fontFamily: 'monospace', letterSpacing: 3, textTransform: 'uppercase', color: '#f59e0b', margin: 0 }}>
+              Total Specimen Value
+            </p>
+            <p style={{ fontSize: 48, fontWeight: 900, color: '#fbbf24', margin: '8px 0 0' }}>
+              {formatPHP(portfolioTotal)}
+            </p>
+          </div>
+
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {SPECIMENS.map(spec => {
+              const val = specimenData[spec.id] || 0;
+              const pct = Math.min(100, (val / spec.targetRef) * 100);
+              return (
+                <div key={spec.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 16,
+                  padding: '16px 20px', borderRadius: 16,
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                    background: val > 0 ? spec.colonyColor : 'rgba(100,116,139,0.2)',
+                    border: `2px solid ${val > 0 ? spec.rimColor : 'rgba(100,116,139,0.3)'}`,
+                  }} />
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 12, fontFamily: 'monospace', color: val > 0 ? spec.rimColor : '#64748b', margin: 0, letterSpacing: 2 }}>
+                      {spec.specimenId} · {spec.shortName}
+                    </p>
+                    <p style={{ fontSize: 22, fontWeight: 800, color: val > 0 ? '#fafaf9' : '#64748b', margin: '2px 0 0' }}>
+                      {val > 0 ? formatPHP(val) : '—'}
+                    </p>
+                  </div>
+                  <p style={{ fontSize: 18, fontWeight: 700, color: val > 0 ? spec.rimColor : '#475569', margin: 0, flexShrink: 0 }}>
+                    {pct.toFixed(0)}%
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{
+            padding: '18px 22px', borderRadius: 16, marginTop: 14,
+            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          }}>
+            <div>
+              <p style={{ fontSize: 11, fontFamily: 'monospace', color: '#78716c', letterSpacing: 2, textTransform: 'uppercase', margin: 0 }}>
+                Culture Status
+              </p>
+              <p style={{
+                fontSize: 20, fontWeight: 900, fontFamily: 'monospace', margin: '4px 0 0',
+                color: diagnostic.status.includes('THRIVING') ? '#10b981' :
+                       diagnostic.status.includes('STABLE') ? '#3b82f6' :
+                       diagnostic.status.includes('RISK') ? '#f59e0b' : '#ef4444',
+              }}>
+                {diagnostic.status}
+              </p>
+            </div>
+            {diagnostic.survivalDays > 0 && (
+              <div style={{ textAlign: 'right' }}>
+                <p style={{
+                  fontSize: 28, fontWeight: 900, fontFamily: 'monospace', margin: 0,
+                  color: diagnostic.survivalDays >= 180 ? '#10b981' : diagnostic.survivalDays >= 90 ? '#f59e0b' : '#ef4444',
+                }}>
+                  {diagnostic.survivalDays} araw
+                </p>
+                <p style={{ fontSize: 10, color: '#78716c', margin: '2px 0 0' }}>Emergency survival</p>
+              </div>
+            )}
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 22, marginTop: 20, textAlign: 'center' }}>
+            <p style={{ fontSize: 18, fontWeight: 700, color: '#f59e0b', margin: '0 0 8px' }}>
+              pamilyasecureph.vercel.app
+            </p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#d6d3d1', margin: 0 }}>
+              Kris Jenelyn De Las Peñas
+            </p>
+            <p style={{ fontSize: 12, color: '#78716c', margin: '2px 0 0' }}>
+              Microbiologist · Pru Life UK Financial Advisor
+            </p>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Timer, Microscope, Beaker, Eye, EyeOff } from 'lucide-react';
+import { Activity, Timer, Microscope, ShieldPlus, Beaker, Eye, EyeOff } from 'lucide-react';
 import PetriDishPortfolio from './PetriDishPortfolio';
 import FinancialImmunityTest from './FinancialImmunityTest';
 import ExpirationCalculator from './ExpirationCalculator';
+import GapCalculator from './GapCalculator';
 import ContactModal from './ContactModal';
 import { supabase } from './lib/supabase';
 
@@ -108,6 +109,7 @@ export default function App() {
   const navItems = [
     { id: 'immunity',   label: 'Immunity Test',  icon: <Activity   className="w-4 h-4" /> },
     { id: 'expiration', label: 'Savings Runway', icon: <Timer      className="w-4 h-4" /> },
+    { id: 'gap',        label: 'Coverage Gap',   icon: <ShieldPlus className="w-4 h-4" /> },
     { id: 'petri',      label: 'My Portfolio',   icon: <Microscope className="w-4 h-4" /> },
   ];
 
@@ -209,6 +211,12 @@ export default function App() {
               {activeTab === 'expiration' && !clientView && (
                 <ExpirationCalculator
                   portfolioTotal={portfolioTotal}
+                  onContactClick={() => setShowContact(true)}
+                />
+              )}
+              {activeTab === 'gap' && !clientView && (
+                <GapCalculator
+                  specimenData={specimenData}
                   onContactClick={() => setShowContact(true)}
                 />
               )}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Info, Calculator } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Info, Calculator, GitCompareArrows } from 'lucide-react';
 import { formatPHP } from './utils';
 import { testimonials } from './testimonials';
 
@@ -34,6 +34,9 @@ export default function ExpirationCalculator({ portfolioTotal = 0, onContactClic
   const [inflationRate,   setInflationRate]   = useState(5);
   const [growthRate,      setGrowthRate]      = useState(6);
   const [showAdvanced,    setShowAdvanced]    = useState(false);
+  const [showWhatIf,      setShowWhatIf]      = useState(false);
+  const [extraSaving,     setExtraSaving]     = useState(5000);
+  const [betterGrowth,    setBetterGrowth]    = useState(2);
   const manualOverride    = useRef(false);
   const [testimonialIdx, setTestimonialIdx]   = useState(0);
 
@@ -51,24 +54,24 @@ export default function ExpirationCalculator({ portfolioTotal = 0, onContactClic
   }, []);
 
   // ── Calculation ─────────────────────────────────────────────────────────────
-  // Convert annual rates to monthly using compound formula
   const mInflation = Math.pow(1 + inflationRate / 100, 1 / 12) - 1;
-  const mGrowth    = Math.pow(1 + growthRate    / 100, 1 / 12) - 1;
 
-  const calculateDepletion = () => {
-    let bal = Math.max(0, startingCapital || 0);
-    let exp = Math.max(0, monthlyExpense  || 0);
+  function runDepletion(capital, expense, annualGrowth) {
+    const mGr = Math.pow(1 + annualGrowth / 100, 1 / 12) - 1;
+    let bal = Math.max(0, capital || 0);
+    let exp = Math.max(0, expense || 0);
     if (bal <= 0 || exp <= 0) return { months: 0, depleted: false };
     const maxMonths = Math.max(0, (120 - currentAge) * 12);
     for (let m = 0; m < maxMonths; m++) {
-      bal = bal * (1 + mGrowth) - exp;
+      bal = bal * (1 + mGr) - exp;
       if (bal <= 0) return { months: m + 1, depleted: true };
       exp = exp * (1 + mInflation);
     }
     return { months: maxMonths, depleted: false };
-  };
+  }
 
-  const { months, depleted } = calculateDepletion();
+  // Current scenario
+  const { months, depleted } = runDepletion(startingCapital, monthlyExpense, growthRate);
   const yearsRunway  = months / 12;
   const depletionAge = currentAge + yearsRunway;
   const yearsShort   = depleted ? Math.round(targetAge - depletionAge) : 0;
@@ -83,6 +86,18 @@ export default function ExpirationCalculator({ portfolioTotal = 0, onContactClic
   const resultYears  = depleted ? Math.round(yearsRunway) : Math.round(totalHorizon);
   const currentYear  = new Date().getFullYear();
   const depletionYear = Math.round(currentYear + yearsRunway);
+
+  // What-If scenario
+  const wiExpense = Math.max(0, monthlyExpense - extraSaving);
+  const wiGrowth  = growthRate + betterGrowth;
+  const wi = runDepletion(startingCapital, wiExpense, wiGrowth);
+  const wiYears      = wi.months / 12;
+  const wiAge        = currentAge + wiYears;
+  const wiOnTrack    = !wi.depleted;
+  const wiResultAge  = wi.depleted ? wiAge.toFixed(0) : `${targetAge}+`;
+  const wiCovered    = !hasData || !wi.depleted ? totalHorizon : Math.max(0, Math.min(totalHorizon, wiYears));
+  const wiBarPercent = Math.min(100, Math.max(0, (wiCovered / totalHorizon) * 100));
+  const extraYears   = Math.round(wiYears - yearsRunway);
 
   return (
     <div className="h-full flex items-center justify-center p-4 overflow-x-hidden">
@@ -338,6 +353,100 @@ export default function ExpirationCalculator({ portfolioTotal = 0, onContactClic
                     Maintaining your current savings rate keeps your family financially secure.
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* What If? Comparison */}
+            {hasData && (
+              <div className="space-y-3">
+                <button
+                  onClick={() => setShowWhatIf(!showWhatIf)}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all border ${
+                    showWhatIf
+                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                      : 'bg-stone-100 text-stone-600 border-stone-200 hover:bg-stone-200'
+                  }`}
+                >
+                  <GitCompareArrows className="w-4 h-4" />
+                  {showWhatIf ? 'Hide Comparison' : 'Compare: "What If?"'}
+                </button>
+
+                {showWhatIf && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="space-y-3 overflow-hidden"
+                  >
+                    {/* What-if inputs */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                        <label className="text-[10px] text-blue-600 font-medium block mb-1">Extra monthly savings</label>
+                        <div className="text-lg font-black text-blue-700">{formatPHP(extraSaving)}</div>
+                        <input
+                          type="range" min="1000" max="30000" step="1000" value={extraSaving}
+                          onChange={(e) => setExtraSaving(Number(e.target.value))}
+                          className="w-full h-1.5 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600 mt-1"
+                        />
+                      </div>
+                      <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                        <label className="text-[10px] text-blue-600 font-medium block mb-1">Better growth rate</label>
+                        <div className="text-lg font-black text-blue-700">+{betterGrowth.toFixed(1)}%</div>
+                        <input
+                          type="range" min="0" max="6" step="0.5" value={betterGrowth}
+                          onChange={(e) => setBetterGrowth(Number(e.target.value))}
+                          className="w-full h-1.5 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600 mt-1"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Side-by-side comparison */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className={`rounded-xl p-4 text-center border-2 ${
+                        onTrack ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'
+                      }`}>
+                        <p className="text-[10px] font-mono text-stone-400 uppercase tracking-widest mb-1">Current Path</p>
+                        <p className={`text-3xl font-black ${onTrack ? 'text-emerald-700' : 'text-red-600'}`}>
+                          {resultAge}
+                        </p>
+                        <p className="text-[10px] text-stone-500 mt-0.5">years old</p>
+                        <div className="h-2 bg-stone-200 rounded-full overflow-hidden mt-2">
+                          <div
+                            className={`h-full rounded-full ${onTrack ? 'bg-emerald-500' : 'bg-red-500'}`}
+                            style={{ width: `${barPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className={`rounded-xl p-4 text-center border-2 ${
+                        wiOnTrack ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'
+                      }`}>
+                        <p className="text-[10px] font-mono text-blue-500 uppercase tracking-widest mb-1">With Plan</p>
+                        <p className={`text-3xl font-black ${wiOnTrack ? 'text-emerald-700' : 'text-amber-600'}`}>
+                          {wiResultAge}
+                        </p>
+                        <p className="text-[10px] text-stone-500 mt-0.5">years old</p>
+                        <div className="h-2 bg-stone-200 rounded-full overflow-hidden mt-2">
+                          <div
+                            className={`h-full rounded-full ${wiOnTrack ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                            style={{ width: `${wiBarPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Diff callout */}
+                    {extraYears > 0 && (
+                      <div className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                        <p className="text-sm font-bold text-blue-700">
+                          +{extraYears} more {extraYears === 1 ? 'year' : 'years'}
+                        </p>
+                        <p className="text-xs text-blue-500">
+                          with {formatPHP(extraSaving)}/mo extra + {wiGrowth.toFixed(1)}% growth
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
               </div>
             )}
 
