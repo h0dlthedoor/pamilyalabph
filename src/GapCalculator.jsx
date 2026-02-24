@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ShieldPlus, Shield, HeartPulse, Wallet, GraduationCap, Landmark,
+  Shield, HeartPulse, Wallet, GraduationCap, Landmark,
   Info, ChevronRight, ChevronLeft, Users, Briefcase, Home, CreditCard,
 } from 'lucide-react';
 import { formatPHP, formatShort } from './utils';
