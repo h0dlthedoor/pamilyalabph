@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, ShieldPlus, Beaker, UserPlus, Settings, Lock, X, Loader2 } from 'lucide-react';
+import { Activity, Beaker, UserPlus, Settings, Lock, X, Loader2, ShieldPlus } from 'lucide-react';
+import { playChime } from './sounds';
 import FinancialImmunityTest from './FinancialImmunityTest';
 import GapCalculator from './GapCalculator';
 import ClientInquiryForm from './ClientInquiryForm';
@@ -69,7 +70,7 @@ export default function App() {
   const navItems = [
     { id: 'immunity', label: 'Immunity Test',  icon: <Activity   className="w-4 h-4" /> },
     { id: 'gap',      label: 'Coverage Gap',   icon: <ShieldPlus className="w-4 h-4" /> },
-    { id: 'inquire',  label: 'Kumunsulta',     icon: <UserPlus   className="w-4 h-4" /> },
+    { id: 'inquire',  label: 'Inquire',         icon: <UserPlus   className="w-4 h-4" /> },
     ...(session ? [{ id: 'admin', label: 'Admin', icon: <Settings className="w-4 h-4" /> }] : []),
   ];
 
@@ -230,10 +231,10 @@ export default function App() {
               className="h-full min-h-full py-6"
             >
               {activeTab === 'immunity' && (
-                <FinancialImmunityTest onContactClick={() => setShowContact(true)} />
+                <FinancialImmunityTest />
               )}
               {activeTab === 'gap' && (
-                <GapCalculator onContactClick={() => setShowContact(true)} />
+                <GapCalculator />
               )}
               {activeTab === 'inquire' && (
                 <ClientInquiryForm />
@@ -275,9 +276,9 @@ export default function App() {
               </button>
             ))}
           </div>
-          <button onClick={() => setShowContact(true)}
-            className="touch-feedback cta-pulse w-full py-3.5 rounded-2xl font-bold text-stone-900 bg-amber-400 text-sm shadow-md">
-            Book Free Consultation · Libre
+          <button onClick={() => { playChime(); setShowContact(true); }}
+            className="touch-feedback cta-pulse w-full py-3.5 rounded-2xl font-bold text-stone-900 bg-amber-400 text-sm shadow-md active:scale-95">
+            Book Free Consultation
           </button>
         </div>
       </div>

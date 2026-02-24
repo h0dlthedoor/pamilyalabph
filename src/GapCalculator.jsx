@@ -5,7 +5,6 @@ import {
   Info, ChevronRight, ChevronLeft, Users, Briefcase, Home, CreditCard,
 } from 'lucide-react';
 import { formatPHP, formatShort } from './utils';
-import { testimonials } from './testimonials';
 import {
   calcLife, calcHealth, calcEmergency, calcEducation, calcRetirement,
   calcOverallScore, EDUCATION_COSTS,
@@ -37,13 +36,13 @@ function NumericInput({ value, onChange, placeholder, className, name }) {
 
 // ─── Wizard Steps Config ────────────────────────────────────────────────────────
 const STEPS = [
-  { key: 'family',  label: 'ANG PAMILYA MO',        title: 'Family Profile' },
-  { key: 'assets',  label: 'ANONG MERON KA NA?',     title: 'What You Have' },
-  { key: 'goals',   label: 'MGA UTANG AT PANGARAP',  title: 'Debts & Goals' },
+  { key: 'family',  label: 'YOUR FAMILY',      title: 'Family Profile' },
+  { key: 'assets',  label: 'WHAT YOU HAVE',     title: 'What You Have' },
+  { key: 'goals',   label: 'DEBTS & GOALS',     title: 'Debts & Goals' },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function GapCalculator({ onContactClick }) {
+export default function GapCalculator() {
   // Step state
   const [step, setStep] = useState(0); // 0-2 = wizard, 3 = results
 
@@ -66,13 +65,6 @@ export default function GapCalculator({ onContactClick }) {
   const [mortgageBalance, setMortgageBalance] = useState(0);
   const [schoolType, setSchoolType] = useState('private');
   const [retirementAge, setRetirementAge] = useState(60);
-
-  // Testimonial rotation
-  const [testimonialIdx, setTestimonialIdx] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => setTestimonialIdx((i) => (i + 1) % testimonials.length), 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   // ── Calculations (derived from state) ───────────────────────────────────────
   const education = calcEducation({ numberOfChildren, youngestChildAge, schoolType });
@@ -125,7 +117,7 @@ export default function GapCalculator({ onContactClick }) {
             PamilyaLab · 5-Pillar Needs Analysis
           </p>
           <h2 className="text-white text-2xl font-bold leading-tight">
-            Sapat ba ang proteksyon ng pamilya mo?
+            Is your family's protection enough?
           </h2>
           <p className="text-stone-300 text-sm mt-1">
             {step < 3 ? '3 steps · 5 minutes · Professional-grade analysis' : 'Your complete financial gap report'}
@@ -174,7 +166,7 @@ export default function GapCalculator({ onContactClick }) {
                   <div className="space-y-4">
                     <div className="text-center pt-2 pb-1">
                       <Users className="w-10 h-10 text-blue-500 mx-auto mb-3" />
-                      <h3 className="text-xl font-bold text-stone-900">Ang Pamilya Mo</h3>
+                      <h3 className="text-xl font-bold text-stone-900">Your Family Profile</h3>
                       <p className="text-sm text-stone-500 mt-1">Tell us about your family so we can calculate your needs.</p>
                     </div>
 
@@ -203,7 +195,7 @@ export default function GapCalculator({ onContactClick }) {
                     <div className="bg-stone-50 p-4 rounded-2xl border border-stone-200">
                       <label className="text-xs text-stone-500 font-medium block mb-2">Is your spouse working?</label>
                       <div className="flex gap-3">
-                        {[{ val: true, label: 'Oo, may trabaho' }, { val: false, label: 'Hindi / Solo income' }].map(opt => (
+                        {[{ val: true, label: 'Yes, working' }, { val: false, label: 'No / Solo income' }].map(opt => (
                           <button key={String(opt.val)} type="button" onClick={() => setSpouseWorking(opt.val)}
                             className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium border-2 transition-colors ${
                               spouseWorking === opt.val
@@ -248,7 +240,7 @@ export default function GapCalculator({ onContactClick }) {
                   <div className="space-y-4">
                     <div className="text-center pt-2 pb-1">
                       <Briefcase className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
-                      <h3 className="text-xl font-bold text-stone-900">Anong Meron Ka Na?</h3>
+                      <h3 className="text-xl font-bold text-stone-900">What You Have</h3>
                       <p className="text-sm text-stone-500 mt-1">What financial protection do you currently have?</p>
                     </div>
 
@@ -279,7 +271,7 @@ export default function GapCalculator({ onContactClick }) {
                     <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-xl border border-amber-100">
                       <Info className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
                       <p className="text-xs text-amber-700">
-                        Hindi mo alam ang exact amounts? Okay lang — estimate mo muna. Mas mahalaga ang big picture kaysa exact na numero.
+                        Don't know the exact amounts? That's okay — estimate for now. The big picture matters more than exact numbers.
                       </p>
                     </div>
                   </div>
@@ -290,7 +282,7 @@ export default function GapCalculator({ onContactClick }) {
                   <div className="space-y-4">
                     <div className="text-center pt-2 pb-1">
                       <Home className="w-10 h-10 text-purple-500 mx-auto mb-3" />
-                      <h3 className="text-xl font-bold text-stone-900">Mga Utang at Pangarap</h3>
+                      <h3 className="text-xl font-bold text-stone-900">Debts & Goals</h3>
                       <p className="text-sm text-stone-500 mt-1">Your debts and goals shape how much life insurance you truly need.</p>
                     </div>
 
@@ -371,7 +363,7 @@ export default function GapCalculator({ onContactClick }) {
                     {step < 2 ? (
                       <>Next <ChevronRight className="w-4 h-4" /></>
                     ) : (
-                      <>Ipakita ang Results <ChevronRight className="w-4 h-4" /></>
+                      <>Show Results <ChevronRight className="w-4 h-4" /></>
                     )}
                   </button>
                 </div>
@@ -389,13 +381,13 @@ export default function GapCalculator({ onContactClick }) {
                   <p className="text-xs font-mono text-stone-400 uppercase tracking-widest mb-2">Overall Protection Score</p>
                   <p className={`text-5xl font-black ${scoreColor}`}>{overallScore}%</p>
                   <p className="text-sm text-stone-600 mt-2 font-medium">
-                    {overallScore >= 80 ? 'Malakas ang proteksyon mo!' :
-                     overallScore >= 40 ? 'May mga gaps pa — kaya pang i-improve.' :
-                     'Maraming butas — kailangan ng action plan.'}
+                    {overallScore >= 80 ? 'Your protection is strong!' :
+                     overallScore >= 40 ? 'There are gaps — room for improvement.' :
+                     'Significant gaps — you need an action plan.'}
                   </p>
                   {totalGap > 0 && (
                     <p className="text-xs text-stone-500 mt-2">
-                      Kabuuang kulang: <span className="font-bold text-stone-700">{formatShort(totalGap)}</span>
+                      Total gap: <span className="font-bold text-stone-700">{formatShort(totalGap)}</span>
                     </p>
                   )}
                 </div>
@@ -424,7 +416,7 @@ export default function GapCalculator({ onContactClick }) {
                         </span>
                         {isFirst && (
                           <span className="ml-auto px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold">
-                            Unahin mo ito
+                            Top priority
                           </span>
                         )}
                         {p.applicable === false && (
@@ -460,7 +452,7 @@ export default function GapCalculator({ onContactClick }) {
                           <div className="text-center">
                             {p.gap > 0 ? (
                               <p className={`text-lg font-black tabular-nums ${p.pct >= 50 ? 'text-amber-700' : 'text-red-600'}`}>
-                                KULANG: {formatPHP(p.gap)}
+                                GAP: {formatPHP(p.gap)}
                               </p>
                             ) : (
                               <p className="text-lg font-black text-emerald-700">&#10003; COVERED</p>
@@ -472,32 +464,10 @@ export default function GapCalculator({ onContactClick }) {
                   );
                 })}
 
-                {/* CTA */}
-                <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 text-center space-y-3">
-                  <p className="text-stone-900 font-bold text-base">
-                    Gusto mong i-close ang coverage gaps?
-                  </p>
-                  <p className="text-amber-700 text-xs leading-relaxed">
-                    A licensed PamilyaLab advisor can build a plan to close your gaps — for free.
-                  </p>
-                  <div className="py-2 min-h-[52px]">
-                    <p className="text-stone-500 text-xs italic leading-relaxed">
-                      &ldquo;{testimonials[testimonialIdx].quote}&rdquo;
-                    </p>
-                    <p className="text-stone-400 text-[10px] mt-1 font-medium">
-                      — {testimonials[testimonialIdx].name}, {testimonials[testimonialIdx].age}, {testimonials[testimonialIdx].city}
-                    </p>
-                  </div>
-                  <button type="button" onClick={onContactClick}
-                    className="cta-pulse w-full py-3.5 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-[color,background-color,border-color,box-shadow] duration-200">
-                    I-close ang Gaps — Libre
-                  </button>
-                </div>
-
                 {/* Restart */}
                 <button type="button" onClick={restart}
                   className="w-full py-2.5 px-4 rounded-xl text-sm text-stone-500 hover:text-stone-700 transition-colors">
-                  Ulit mula simula (Recalculate)
+                  Start Over
                 </button>
               </motion.div>
             )}

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { UserPlus, User, Phone, Hash, MessageSquare, CheckCircle2, Loader2 } from 'lucide-react';
 import { supabase } from './lib/supabase';
-import { testimonials } from './testimonials';
+import { playSuccess } from './sounds';
 
 const INTEREST_OPTIONS = [
   'Life Insurance',
@@ -22,12 +22,6 @@ export default function ClientInquiryForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
-  const [testimonialIdx, setTestimonialIdx] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => setTestimonialIdx((i) => (i + 1) % testimonials.length), 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   const toggleInterest = (item) => {
     setInterests((prev) =>
@@ -36,11 +30,11 @@ export default function ClientInquiryForm() {
   };
 
   const validate = () => {
-    if (!firstName.trim() || !lastName.trim()) return 'Pakilagay ang pangalan mo.';
+    if (!firstName.trim() || !lastName.trim()) return 'Please enter your name.';
     if (!/^09\d{9}$/.test(mobile)) return 'Invalid mobile number. Use 09XX format (11 digits).';
     const ageNum = Number(age);
     if (!age || ageNum < 18 || ageNum > 99) return 'Age must be between 18 and 99.';
-    if (interests.length === 0) return 'Pumili ng kahit isang interest.';
+    if (interests.length === 0) return 'Please select at least one interest.';
     return '';
   };
 
@@ -51,21 +45,37 @@ export default function ClientInquiryForm() {
     setError('');
     setSubmitting(true);
 
-    const { error: dbError } = await supabase.from('client_inquiries').insert({
+    const payload = {
       first_name: firstName.trim(),
       last_name: lastName.trim(),
       mobile: mobile.trim(),
       age: Number(age),
       interests,
       message: message.trim() || null,
-    });
+    };
+
+    const { error: dbError } = await supabase.from('client_inquiries').insert(payload);
 
     setSubmitting(false);
     if (dbError) {
       setError('Something went wrong. Please try again.');
       return;
     }
+
+    playSuccess();
     setSubmitted(true);
+
+    // Fire-and-forget email notification to Kris
+    supabase.functions.invoke('notify-inquiry', {
+      body: {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        mobile: mobile.trim(),
+        age: Number(age),
+        interests,
+        message: message.trim() || null,
+      },
+    }).catch(() => {});
   };
 
   const handleReset = () => {
@@ -88,30 +98,35 @@ export default function ClientInquiryForm() {
         {/* Header */}
         <div className="bg-gradient-to-r from-stone-900 via-stone-800 to-amber-900 px-8 py-5">
           <p className="text-amber-400 text-xs font-mono uppercase tracking-widest mb-1">
-            PamilyaLab · Kumunsulta
+            PamilyaLab · Inquire
           </p>
           <h2 className="text-white text-2xl font-bold leading-tight">
-            Mag-inquire ngayon — Libre lang!
+            Inquire Now — It's Free!
           </h2>
           <p className="text-stone-300 text-sm mt-1">
-            I-submit ang form at makikipag-ugnayan si Kris sa&apos;yo within 24 hours.
+            Submit the form and Kris will reach out within 24 hours.
           </p>
         </div>
 
         <div className="p-6 sm:p-8">
           {submitted ? (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               className="text-center space-y-5 py-8"
             >
-              <div className="w-20 h-20 rounded-full bg-emerald-100 border-2 border-emerald-200 flex items-center justify-center mx-auto">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', bounce: 0.5, duration: 0.6 }}
+                className="w-20 h-20 rounded-full bg-emerald-100 border-2 border-emerald-200 flex items-center justify-center mx-auto"
+              >
                 <CheckCircle2 className="w-10 h-10 text-emerald-600" />
-              </div>
+              </motion.div>
               <div>
-                <h3 className="text-2xl font-black text-stone-900 mb-2">Salamat, {firstName}!</h3>
+                <h3 className="text-2xl font-black text-stone-900 mb-2">Thank you, {firstName}!</h3>
                 <p className="text-stone-600 text-sm max-w-md mx-auto leading-relaxed">
-                  Na-receive na namin ang inquiry mo. Si Kris ay makikipag-ugnayan sa&apos;yo within 24 hours via call or text.
+                  We've received your inquiry. Kris will reach out within 24 hours via call or text.
                 </p>
               </div>
               <button
@@ -119,7 +134,7 @@ export default function ClientInquiryForm() {
                 onClick={handleReset}
                 className="py-3 px-8 rounded-xl text-sm font-bold text-stone-600 bg-stone-100 hover:bg-stone-200 border border-stone-200 transition-all"
               >
-                Mag-submit ulit
+                Submit Another Inquiry
               </button>
             </motion.div>
           ) : (
@@ -187,7 +202,7 @@ export default function ClientInquiryForm() {
               {/* Interests */}
               <div>
                 <label className="text-xs font-medium text-stone-600 block mb-2">
-                  Anong gusto mong malaman? <span className="text-stone-400">(pumili ng isa o higit pa)</span>
+                  What would you like to know? <span className="text-stone-400">(select one or more)</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {INTEREST_OPTIONS.map((item) => (
@@ -217,7 +232,7 @@ export default function ClientInquiryForm() {
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="May tanong ka ba o gusto mong i-share?"
+                    placeholder="Any questions or anything you'd like to share?"
                     rows={3}
                     className={`${inputCls} pl-10 resize-none`}
                   />
@@ -235,36 +250,19 @@ export default function ClientInquiryForm() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="cta-pulse w-full py-4 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-all duration-200 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:animate-none flex items-center justify-center gap-2"
+                className="cta-pulse w-full py-4 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-all duration-200 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:animate-none flex items-center justify-center gap-2 active:scale-95"
               >
                 {submitting ? (
                   <><Loader2 className="w-5 h-5 animate-spin" /> Submitting...</>
                 ) : (
-                  <><UserPlus className="w-5 h-5" /> I-submit ang Inquiry</>
+                  <><UserPlus className="w-5 h-5" /> Submit Inquiry</>
                 )}
               </button>
 
-              {/* Privacy + Testimonial */}
+              {/* Privacy */}
               <p className="text-[10px] text-stone-400 text-center">
                 100% confidential. Your info is only used by your PamilyaLab advisor.
               </p>
-
-              <div className="hidden md:block bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 text-center space-y-3">
-                <p className="text-stone-900 font-bold text-base">
-                  Bakit mag-inquire sa PamilyaLab?
-                </p>
-                <p className="text-amber-700 text-xs leading-relaxed">
-                  No-obligation consultation with a licensed Pru Life UK advisor — get a clear picture of your family&apos;s financial health.
-                </p>
-                <div className="py-2 min-h-[52px]">
-                  <p className="text-stone-500 text-xs italic leading-relaxed">
-                    &ldquo;{testimonials[testimonialIdx].quote}&rdquo;
-                  </p>
-                  <p className="text-stone-400 text-[10px] mt-1 font-medium">
-                    — {testimonials[testimonialIdx].name}, {testimonials[testimonialIdx].age}, {testimonials[testimonialIdx].city}
-                  </p>
-                </div>
-              </div>
             </form>
           )}
         </div>

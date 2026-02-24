@@ -1,82 +1,79 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldAlert, ShieldCheck, Activity, ChevronRight,
   Users, Shield, FlaskConical, Wallet, TrendingUp,
-  CheckCircle2, Download, Loader2,
+  Download, Loader2,
 } from 'lucide-react';
-import { testimonials } from './testimonials';
 import { downloadCardImage } from './shareCard';
 
-// ─── Question bank — Filipino-English, PH-context aware ──────────────────────
+// ─── Question bank — English, PH-context aware ─────────────────────────────
 const questions = [
   {
     id: 1,
     category: 'LIFE STAGE',
     icon: <Users className="w-10 h-10 text-blue-500 mb-5" />,
-    text: 'Nasa anong yugto ka ng buhay mo?',
+    text: 'What stage of life are you in?',
     subtitle: 'This sets context for your results — your life stage doesn\'t add or subtract from your score.',
     options: [
-      { text: 'Single o bagong kasal – nagsisimula pa lang (20s–early 30s)', score: 15 },
-      { text: 'May pamilya na, tumaas ang kita at gastos (30s–40s)', score: 15 },
+      { text: 'Single or newly married — just starting out (20s–early 30s)', score: 15 },
+      { text: 'Growing family — income and expenses are rising (30s–40s)', score: 15 },
       { text: 'Approaching retirement, thinking ahead (40s–50s)', score: 15 },
-      { text: 'Near or at retirement – protecting what I\'ve built (50+)', score: 15 },
+      { text: 'Near or at retirement — protecting what I\'ve built (50+)', score: 15 },
     ],
   },
   {
     id: 2,
     category: 'LIFE INSURANCE',
     icon: <Shield className="w-10 h-10 text-indigo-500 mb-5" />,
-    text: 'Kung hindi ka na andito bukas, kaya ba ng pamilya mong mag-survive?',
+    text: 'If you were gone tomorrow, could your family survive financially?',
     subtitle: 'Life insurance replaces your income for your family. Most experts recommend 5–10× your annual income.',
     options: [
-      { text: 'Wala akong life insurance – hindi financially covered ang pamilya ko', score: 5 },
-      { text: 'Meron pero group/employer coverage lang – mawawala kapag umalis ako', score: 10 },
-      { text: 'May personal life insurance pero hindi ko sure kung sapat na', score: 15 },
-      { text: 'May personal life insurance ako na at least 5–10× my annual income', score: 20 },
+      { text: 'No life insurance — my family isn\'t financially covered', score: 5 },
+      { text: 'Only group/employer coverage — lost if I leave the company', score: 10 },
+      { text: 'Have personal life insurance but not sure if it\'s enough', score: 15 },
+      { text: 'Have personal life insurance worth at least 5–10× my annual income', score: 20 },
     ],
   },
   {
     id: 3,
     category: 'HEALTH COVERAGE',
     icon: <FlaskConical className="w-10 h-10 text-emerald-500 mb-5" />,
-    text: 'Sa malaking ospital bill, sino ang magbabayad?',
+    text: 'If a major hospital bill hits, who pays?',
     subtitle: 'Critical illness (cancer, stroke, heart attack) can cost ₱500K–₱3M in the Philippines. PhilHealth covers only a fraction.',
     options: [
-      { text: 'PhilHealth lang — mataas ang out-of-pocket ko sa malaking sakit', score: 5 },
-      { text: 'May HMO sa trabaho, at konting savings for medical', score: 12 },
-      { text: 'May sariling HMO + CI coverage na hindi tied sa employer', score: 20 },
+      { text: 'PhilHealth only — high out-of-pocket for any major illness', score: 5 },
+      { text: 'Have employer HMO plus some savings for medical expenses', score: 12 },
+      { text: 'Have my own HMO + critical illness coverage not tied to employer', score: 20 },
     ],
   },
   {
     id: 4,
     category: 'EMERGENCY FUND',
     icon: <Wallet className="w-10 h-10 text-amber-500 mb-5" />,
-    text: 'Kung mawalan ka ng trabaho ngayon, gaano katagal ang pamilya mo?',
+    text: 'If you lost your job today, how long could your family last?',
     subtitle: 'An emergency fund in cash keeps your family afloat without borrowing. Target: 3–6 months of expenses.',
     options: [
-      { text: 'Wala pa — bahala na kung may mangyari (less than 1 month)', score: 5 },
-      { text: 'About 1–3 months lang — konti pa lang ang naitabi', score: 12 },
-      { text: '3–6+ months ng buwanang gastos — naka-ipon sa cash o liquid savings', score: 20 },
+      { text: 'Nothing saved — we\'d figure it out (less than 1 month)', score: 5 },
+      { text: 'About 1–3 months — still building up savings', score: 12 },
+      { text: '3–6+ months of expenses in cash or liquid savings', score: 20 },
     ],
   },
   {
     id: 5,
     category: 'RETIREMENT',
     icon: <TrendingUp className="w-10 h-10 text-purple-500 mb-5" />,
-    text: 'Bukod sa SSS o GSIS, may sariling retirement plan ka na ba?',
+    text: 'Beyond SSS or GSIS, do you have your own retirement plan?',
     subtitle: 'SSS/GSIS averages ₱6K–₱18K/month payout. Most Filipino families need 3–5× more to maintain their lifestyle.',
     options: [
-      { text: 'Wala pa — umaasa sa SSS/GSIS, lotto, o mga anak', score: 5 },
-      { text: 'Nagtitipid minsan pero mostly umaasa sa SSS/GSIS pa rin', score: 10 },
-      { text: 'Oo — may dedicated VUL, mutual fund, stocks, o retirement portfolio ako', score: 20 },
+      { text: 'Nothing yet — relying on SSS/GSIS or my children', score: 5 },
+      { text: 'Saving occasionally but mostly counting on SSS/GSIS', score: 10 },
+      { text: 'Yes — have a dedicated VUL, mutual fund, stocks, or retirement portfolio', score: 20 },
     ],
   },
 ];
 
 // ─── Score threshold per answer dot ──────────────────────────────────────────
-// Q1: flat 15  Q2: 5/10/15/20  Q3: 5/12/20  Q4: 5/12/20  Q5: 5/10/20
-// maxScore = 15 + 20 + 20 + 20 + 20 = 95
 function answerDotColor(pts) {
   if (pts >= 15) return { bg: 'bg-emerald-100', dot: 'bg-emerald-500' };
   if (pts >= 10) return { bg: 'bg-amber-100',   dot: 'bg-amber-500' };
@@ -84,20 +81,13 @@ function answerDotColor(pts) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function FinancialImmunityTest({ onContactClick }) {
+export default function FinancialImmunityTest() {
   const [currentStep, setCurrentStep] = useState(0);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [answers, setAnswers] = useState([]);
-  const [testimonialIdx, setTestimonialIdx] = useState(0);
   const [generating, setGenerating] = useState(false);
   const cardRef = useRef(null);
-
-  // Rotate testimonials every 5s
-  useEffect(() => {
-    const timer = setInterval(() => setTestimonialIdx((i) => (i + 1) % testimonials.length), 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   const handleAnswer = (points, optionText) => {
     const next = score + points;
@@ -120,28 +110,28 @@ export default function FinancialImmunityTest({ onContactClick }) {
     setGenerating(true);
     try {
       await downloadCardImage(cardRef.current, 'pamilyalab-results.png');
-    } catch (_) {}
+    } catch { /* ignore */ }
     setGenerating(false);
   };
 
   const getDiagnosis = () => {
     if (score >= 75) return {
-      label: 'Mataas ang Immunity', sublabel: 'High Financial Immunity',
-      text: 'Maganda! Your family\'s financial foundation is strong. You\'re covering the major bases — life, health, emergency, and retirement. Keep building and reviewing annually.',
+      label: 'High Financial Immunity',
+      text: 'Great news! Your family\'s financial foundation is strong. You\'re covering the major bases — life, health, emergency, and retirement. Keep building and reviewing annually.',
       color: 'text-emerald-700', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200',
       badgeColor: 'bg-emerald-100 text-emerald-700',
       icon: <ShieldCheck className="w-16 h-16 text-emerald-600" />,
     };
     if (score >= 45) return {
-      label: 'Katamtamang Immunity', sublabel: 'Moderate Financial Immunity',
-      text: 'You\'re on your way, but may gaps in coverage — especially in healthcare, life insurance, or retirement beyond SSS/GSIS. A focused plan can plug these holes.',
+      label: 'Moderate Financial Immunity',
+      text: 'You\'re on your way, but there are gaps in coverage — especially in healthcare, life insurance, or retirement beyond SSS/GSIS. A focused plan can plug these holes.',
       color: 'text-amber-700', bgColor: 'bg-amber-50', borderColor: 'border-amber-200',
       badgeColor: 'bg-amber-100 text-amber-700',
       icon: <Activity className="w-16 h-16 text-amber-600" />,
     };
     return {
-      label: 'Mababang Immunity', sublabel: 'Low Financial Immunity',
-      text: 'Maraming bukas na butas. Your family is exposed to major financial shocks — especially medical bills, income loss, and retirement. Let\'s build your protection layer.',
+      label: 'Low Financial Immunity',
+      text: 'Your family has significant coverage gaps. You\'re exposed to major financial shocks — especially medical bills, income loss, and retirement. Let\'s build your protection layer.',
       color: 'text-red-700', bgColor: 'bg-red-50', borderColor: 'border-red-200',
       badgeColor: 'bg-red-100 text-red-700',
       icon: <ShieldAlert className="w-16 h-16 text-red-600" />,
@@ -162,7 +152,7 @@ export default function FinancialImmunityTest({ onContactClick }) {
             PamilyaLab · Financial Immunity Test
           </p>
           <h2 className="text-white text-2xl font-bold leading-tight">
-            Safe ba ang pamilya mo?
+            Is your family protected?
           </h2>
           <p className="text-stone-300 text-sm mt-1">5 questions · 3 minutes · completely private</p>
         </div>
@@ -239,22 +229,33 @@ export default function FinancialImmunityTest({ onContactClick }) {
             ) : (
               <motion.div
                 key="result"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 className="space-y-6"
               >
-                {/* Score badge */}
-                <div className={`rounded-2xl p-6 ${dx.bgColor} ${dx.borderColor} border-2 text-center`}>
-                  <div className="flex justify-center mb-3">{dx.icon}</div>
+                {/* Score badge with spring bounce */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ type: 'spring', bounce: 0.5, duration: 0.8 }}
+                  className={`rounded-2xl p-6 ${dx.bgColor} ${dx.borderColor} border-2 text-center`}
+                >
+                  <motion.div
+                    className="flex justify-center mb-3"
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', bounce: 0.4, duration: 0.8, delay: 0.2 }}
+                  >
+                    {dx.icon}
+                  </motion.div>
                   <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${dx.badgeColor}`}>
                     Score: {score} / {maxScore} ({scorePercent}%)
                   </div>
                   <h3 className={`text-2xl sm:text-3xl font-black ${dx.color} mb-1`}>{dx.label}</h3>
-                  <p className="text-stone-500 text-xs mb-3">{dx.sublabel}</p>
                   <p className="text-stone-700 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
                     {dx.text}
                   </p>
-                </div>
+                </motion.div>
 
                 {/* Answer summary */}
                 <div className="space-y-2">
@@ -285,46 +286,17 @@ export default function FinancialImmunityTest({ onContactClick }) {
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm bg-stone-900 text-white hover:bg-stone-700 transition-colors disabled:opacity-50"
                 >
                   {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  {generating ? 'Generating...' : 'I-download ang Results'}
+                  {generating ? 'Generating...' : 'Download Results'}
                 </button>
 
-                {/* CTA */}
-                <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center space-y-4">
-                  <div className="flex justify-center">
-                    <CheckCircle2 className="w-8 h-8 text-amber-500" />
-                  </div>
-                  <div>
-                    <p className="text-stone-900 font-bold text-lg">
-                      Gusto mo bang i-close ang mga gaps?
-                    </p>
-                    <p className="text-amber-700 text-sm mt-1">
-                      Book a free consultation with PamilyaLab — a licensed Pru Life UK advisor will walk you through your next steps.
-                    </p>
-                  </div>
-                  {/* Testimonial */}
-                  <div className="py-1 min-h-[52px]">
-                    <p className="text-stone-500 text-xs italic leading-relaxed">
-                      "{testimonials[testimonialIdx].quote}"
-                    </p>
-                    <p className="text-stone-400 text-[10px] mt-1 font-medium">
-                      — {testimonials[testimonialIdx].name}, {testimonials[testimonialIdx].age}, {testimonials[testimonialIdx].city}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={onContactClick}
-                    className="cta-pulse w-full py-4 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-[color,background-color,border-color,box-shadow] duration-200 text-base"
-                  >
-                    Simulan ang Free Consultation
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleRestart}
-                    className="w-full py-2.5 px-4 rounded-xl text-sm text-stone-500 hover:text-stone-700 transition-colors"
-                  >
-                    Ulit mula simula (Retake)
-                  </button>
-                </div>
+                {/* Retake */}
+                <button
+                  type="button"
+                  onClick={handleRestart}
+                  className="w-full py-2.5 px-4 rounded-xl text-sm text-stone-500 hover:text-stone-700 transition-colors"
+                >
+                  Retake Quiz
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -363,9 +335,6 @@ export default function FinancialImmunityTest({ onContactClick }) {
             </p>
             <p style={{ fontSize: 18, fontWeight: 700, margin: '4px 0 0', color: score >= 75 ? '#6ee7b7' : score >= 45 ? '#fde68a' : '#fca5a5' }}>
               {dx.label}
-            </p>
-            <p style={{ fontSize: 13, margin: '4px 0 0', color: 'rgba(255,255,255,0.6)' }}>
-              {dx.sublabel}
             </p>
           </div>
 
