@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'PamilyaLab <notifications@pamilyasecureph.vercel.app>',
+        from: 'PamilyaLab <onboarding@resend.dev>',
         to: [KRIS_EMAIL],
         subject: `New Inquiry: ${firstName} ${lastName}`,
         html,
