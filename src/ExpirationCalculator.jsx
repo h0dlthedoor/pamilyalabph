@@ -1,4 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+// ─── NumericInput — local string state prevents "0 remains" on clear ─────────
+function NumericInput({ value, onChange, placeholder, className }) {
+  const [str, setStr] = useState(value === 0 ? '' : String(value));
+
+  useEffect(() => {
+    const local = str === '' ? 0 : Number(str);
+    if (local !== value) setStr(value === 0 ? '' : String(value)); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <input
+      type="number"
+      min="0"
+      value={str}
+      onChange={(e) => { setStr(e.target.value); onChange(e); }}
+      placeholder={placeholder}
+      className={className}
+    />
+  );
+}
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Info, Calculator } from 'lucide-react';
 import { formatPHP } from './utils';
@@ -109,8 +130,8 @@ export default function ExpirationCalculator({ portfolioTotal = 0, onContactClic
                 </label>
                 <span className="text-sm font-bold text-blue-700">{formatPHP(startingCapital)}</span>
               </div>
-              <input
-                type="number" min="0" value={startingCapital}
+              <NumericInput
+                value={startingCapital}
                 onChange={(e) => setStartingCapital(Math.max(0, Number(e.target.value) || 0))}
                 placeholder="e.g. 3000000"
                 className="w-full bg-white border border-stone-200 text-stone-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
@@ -141,8 +162,8 @@ export default function ExpirationCalculator({ portfolioTotal = 0, onContactClic
                 </label>
                 <span className="text-sm font-bold text-blue-700">{formatPHP(monthlyExpense)}</span>
               </div>
-              <input
-                type="number" min="0" value={monthlyExpense}
+              <NumericInput
+                value={monthlyExpense}
                 onChange={(e) => setMonthlyExpense(Math.max(0, Number(e.target.value) || 0))}
                 placeholder="e.g. 60000"
                 className="w-full bg-white border border-stone-200 text-stone-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"

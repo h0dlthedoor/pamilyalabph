@@ -58,7 +58,7 @@ export default function ContactModal({ isOpen, onClose }) {
               <p className="text-stone-600 text-sm text-center leading-relaxed">
                 Makipag-chat kay{' '}
                 <strong className="text-stone-900">Kris Jenelyn De Las Peñas</strong>{' '}
-                — Licensed Microbiologist &amp; Pru Life UK Financial Advisor — para sa libreng konsultasyon.
+                — Microbiologist &amp; Pru Life UK Financial Advisor — para sa libreng konsultasyon.
               </p>
 
               {/* Viber */}

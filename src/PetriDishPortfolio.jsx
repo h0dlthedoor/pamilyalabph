@@ -1,10 +1,34 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Microscope, CheckCircle2, AlertCircle, AlertTriangle, Clock,
   Dna, FlaskConical, Save, Loader2, CloudOff, Download,
 } from 'lucide-react';
 import { formatPHP, formatShort } from './utils';
+
+// ─── NumericInput — local string state prevents "0 remains" on clear ─────────
+function NumericInput({ value, onChange, className, placeholder, style, onFocus, onBlur }) {
+  const [str, setStr] = React.useState(value === 0 ? '' : String(value));
+
+  useEffect(() => {
+    const local = str === '' ? 0 : Number(str);
+    if (local !== value) setStr(value === 0 ? '' : String(value)); // eslint-disable-line react-hooks/set-state-in-effect
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <input
+      type="number"
+      min="0"
+      value={str}
+      onChange={(e) => { setStr(e.target.value); onChange(e); }}
+      className={className}
+      placeholder={placeholder}
+      style={style}
+      onFocus={onFocus}
+      onBlur={onBlur}
+    />
+  );
+}
 
 // ─── Arc helpers ──────────────────────────────────────────────────────────────
 function arcPath(cx, cy, r, percent) {
@@ -128,6 +152,14 @@ const EDGES = [
   ['retirementInvestments', 'cash'],
   ['cash', 'healthCoverage'],
 ];
+
+// Hoisted static SVG — reticle grid lines for the microscope view
+const RETICLE_GRID = [10, 20, 30, 40, 50, 60, 70, 80, 90].map((v) => (
+  <React.Fragment key={v}>
+    <line x1={v} y1="0" x2={v} y2="100" stroke="rgba(52,211,153,0.055)" strokeWidth="0.3" />
+    <line x1="0" y1={v} x2="100" y2={v} stroke="rgba(52,211,153,0.055)" strokeWidth="0.3" />
+  </React.Fragment>
+));
 
 // Fixed agar texture dots — pre-computed to avoid re-render flicker
 const DISH_TEXTURE = [
@@ -282,10 +314,8 @@ function MobileSpecimenCard({ spec, value, clientView, onChange }) {
       </div>
       {!clientView && (
         <div className="bg-stone-50 border-t border-stone-100 px-4 py-2.5">
-          <input
-            type="number"
-            min="0"
-            value={value || ''}
+          <NumericInput
+            value={value}
             onChange={onChange}
             placeholder={spec.placeholder}
             className="w-full text-right bg-transparent text-sm font-mono text-stone-700 placeholder:text-stone-300 focus:outline-none"
@@ -453,10 +483,8 @@ function PetriDishWidget({ spec, value, onChange, clientView }) {
           </div>
         ) : (
           <div className="w-full px-1">
-            <input
-              type="number"
-              min="0"
-              value={value || ''}
+            <NumericInput
+              value={value}
               onChange={onChange}
               placeholder={spec.placeholder}
               className="w-full text-center bg-slate-50 border rounded-lg text-xs font-mono text-slate-700 placeholder:text-slate-300 px-2 py-1.5 focus:outline-none transition-all"
@@ -475,7 +503,7 @@ function PetriDishWidget({ spec, value, onChange, clientView }) {
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSave, dbStatus, clientView }) {
   const portfolioTotal = SPECIMENS.reduce((s, sp) => s + (specimenData[sp.id] || 0), 0);
-  const diagnostic     = getDiagnostic(specimenData);
+  const diagnostic     = useMemo(() => getDiagnostic(specimenData), [specimenData]);
   const { Icon }       = diagnostic;
   const specimenMap    = Object.fromEntries(SPECIMENS.map((sp) => [sp.id, sp]));
 
@@ -491,7 +519,7 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSa
       <div className="hidden print:block w-full mb-6 text-center border-b-2 border-stone-300 pb-4">
         <h1 className="text-2xl font-black text-stone-900">PamilyaSecure Financial Lab Results</h1>
         <p className="text-sm text-stone-600 mt-1">
-          Kris Jenelyn De Las Peñas · Licensed Microbiologist · Pru Life UK Financial Advisor
+          Kris Jenelyn De Las Peñas · Microbiologist · Pru Life UK Financial Advisor
         </p>
         <p className="text-xs text-stone-400 mt-1 font-mono">
           Report Date: {today} | Lab ID: {reportId} | fiynkdtswagwbgukkjjb.supabase.co
@@ -526,7 +554,7 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSa
           {/* Analyst strip */}
           <div className="bg-slate-50 border-b border-slate-200 px-5 py-1.5 flex justify-between items-center">
             <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">
-              Analyst: K. De Las Peñas · Licensed Microbiologist
+              Analyst: K. De Las Peñas · Microbiologist
             </span>
             <span className="text-[9px] font-mono text-slate-400">{today}</span>
           </div>
@@ -658,7 +686,7 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSa
                 <p className="text-[9px] font-mono text-slate-400 uppercase">Certified by</p>
                 <p className="text-xs font-bold text-slate-700 mt-0.5">Kris Jenelyn De Las Peñas</p>
                 <p className="text-[9px] text-slate-400">
-                  Licensed Microbiologist · Pru Life UK Advisor
+                  Microbiologist · Pru Life UK Advisor
                 </p>
               </div>
               <div className="text-right">
@@ -710,12 +738,7 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSa
             xmlns="http://www.w3.org/2000/svg"
           >
             {/* Microscope reticle grid */}
-            {[10, 20, 30, 40, 50, 60, 70, 80, 90].map((v) => (
-              <React.Fragment key={v}>
-                <line x1={v} y1="0" x2={v} y2="100" stroke="rgba(52,211,153,0.055)" strokeWidth="0.3" />
-                <line x1="0" y1={v} x2="100" y2={v} stroke="rgba(52,211,153,0.055)" strokeWidth="0.3" />
-              </React.Fragment>
-            ))}
+            {RETICLE_GRID}
 
             {/* Center crosshair */}
             <line x1="47" y1="50" x2="53" y2="50" stroke="rgba(52,211,153,0.30)" strokeWidth="0.5" />
