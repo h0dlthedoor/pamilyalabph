@@ -6,7 +6,6 @@ body {
 }
 
 /* ─── Warm Ambient Background ────────────────────────────────────────────── */
-/* Very subtle warm radial glows so the stone-50 bg breathes */
 body::before {
   content: '';
   position: fixed;
@@ -49,4 +48,18 @@ body::before {
 
 .cta-pulse {
   animation: warm-pulse 2.5s ease-in-out infinite;
+}
+
+/* ─── Microscope Scan Line ───────────────────────────────────────────────── */
+/* Sweeps top-to-bottom over the molecular graph, like a confocal scan       */
+@keyframes scan-sweep {
+  0%   { top: -2px; opacity: 0; }
+  4%   { opacity: 1; }
+  96%  { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.scan-line {
+  animation: scan-sweep 5s linear infinite;
+  top: -2px;
 }

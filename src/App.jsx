@@ -44,9 +44,12 @@ export default function App() {
                   Kris | PamilyaLab
                 </h1>
                 <p className="text-[10px] text-amber-500 tracking-widest uppercase font-mono leading-tight">
-                  Financial Health Lab
+                  Financial Pathology Laboratory
                 </p>
               </div>
+              <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[9px] font-mono text-emerald-600 uppercase tracking-wider ml-1">
+                Lab Certified
+              </span>
             </div>
 
             {/* Navigation Tabs */}
@@ -108,7 +111,7 @@ export default function App() {
             Built with care for Filipino families by{' '}
             <span className="font-bold text-stone-800">Kris Jenelyn De Las Peñas</span>
             <span className="text-amber-500 mx-1.5">♥</span>
-            <span className="text-stone-400 font-normal">Licensed Pru Life UK Financial Advisor</span>
+            <span className="text-stone-400 font-normal">Licensed Microbiologist · Pru Life UK Financial Advisor</span>
           </p>
           <p className="text-[10px] text-stone-400 mt-1 tracking-wide">
             © 2026 · For educational purposes only · Calculations are illustrative and not financial advice · Data stays on your device
