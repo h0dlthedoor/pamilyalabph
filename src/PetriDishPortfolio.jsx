@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Microscope, CheckCircle2, AlertCircle, AlertTriangle, Clock,
-  Dna, FlaskConical,
+  Dna, FlaskConical, Save, Loader2, CloudOff,
 } from 'lucide-react';
 import { formatPHP, formatShort } from './utils';
 
@@ -363,7 +363,7 @@ function PetriDishWidget({ spec, value, onChange }) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function PetriDishPortfolio({ specimenData, setSpecimenData }) {
+export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSave, dbStatus }) {
   const portfolioTotal = SPECIMENS.reduce((s, sp) => s + (specimenData[sp.id] || 0), 0);
   const diagnostic     = getDiagnostic(specimenData);
   const { Icon }       = diagnostic;
@@ -429,13 +429,34 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData }) {
             </div>
           </div>
 
-          {/* Total footer */}
-          <div className="border-t border-slate-200 bg-slate-50 px-5 py-3 flex justify-between items-center">
-            <div>
+          {/* Total footer + Save */}
+          <div className="border-t border-slate-200 bg-slate-50 px-5 py-3 flex justify-between items-center gap-3">
+            <div className="min-w-0">
               <p className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">Total Specimen Value</p>
               <p className="text-[9px] font-mono text-slate-400 mt-0.5">All cultures combined</p>
             </div>
-            <span className="text-xl font-black text-amber-500">{formatPHP(portfolioTotal)}</span>
+            <span className="text-xl font-black text-amber-500 shrink-0">{formatPHP(portfolioTotal)}</span>
+            <button
+              onClick={onSave}
+              disabled={dbStatus === 'saving' || dbStatus === 'loading'}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all ${
+                dbStatus === 'saved'
+                  ? 'bg-emerald-500 text-white'
+                  : dbStatus === 'error'
+                  ? 'bg-red-100 text-red-600 border border-red-200'
+                  : 'bg-slate-900 text-white hover:bg-slate-700'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {dbStatus === 'saving' && <Loader2 className="w-3 h-3 animate-spin" />}
+              {dbStatus === 'saved'  && <CheckCircle2 className="w-3 h-3" />}
+              {dbStatus === 'error'  && <CloudOff className="w-3 h-3" />}
+              {dbStatus !== 'saving' && dbStatus !== 'saved' && dbStatus !== 'error' && (
+                <Save className="w-3 h-3" />
+              )}
+              {dbStatus === 'saving' ? 'Saving…' :
+               dbStatus === 'saved'  ? 'Saved'   :
+               dbStatus === 'error'  ? 'Error'   : 'Save'}
+            </button>
           </div>
         </div>
 

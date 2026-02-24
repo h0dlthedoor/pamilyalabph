@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Timer, Microscope, Beaker } from 'lucide-react';
 import PetriDishPortfolio from './PetriDishPortfolio';
 import FinancialImmunityTest from './FinancialImmunityTest';
 import ExpirationCalculator from './ExpirationCalculator';
+import { supabase } from './lib/supabase';
+
+// Fixed profile key — single-user lab, no auth required yet
+const PROFILE_KEY = 'kris-primary';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('immunity');
+  const [dbStatus, setDbStatus] = useState('idle'); // 'idle' | 'loading' | 'saving' | 'saved' | 'error'
 
   // ── Shared specimen state (Portfolio Dashboard → Savings Runway) ─────────
   const [specimenData, setSpecimenData] = useState({
@@ -15,6 +20,63 @@ export default function App() {
     healthCoverage: 0,
     retirementInvestments: 0,
   });
+
+  // ── Load latest snapshot on mount ───────────────────────────────────────
+  useEffect(() => {
+    async function loadPortfolio() {
+      setDbStatus('loading');
+      const { data, error } = await supabase
+        .from('portfolio_snapshots')
+        .select('cash, emergency_fund, health_coverage, retirement_investments')
+        .eq('profile_key', PROFILE_KEY)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 = row not found (first run), anything else is a real error
+        console.error('Supabase load error:', error);
+        setDbStatus('error');
+        return;
+      }
+
+      if (data) {
+        setSpecimenData({
+          cash:                  data.cash,
+          emergencyFund:         data.emergency_fund,
+          healthCoverage:        data.health_coverage,
+          retirementInvestments: data.retirement_investments,
+        });
+      }
+      setDbStatus('idle');
+    }
+
+    loadPortfolio();
+  }, []);
+
+  // ── Save / upsert to Supabase ────────────────────────────────────────────
+  const savePortfolio = useCallback(async () => {
+    setDbStatus('saving');
+    const { error } = await supabase
+      .from('portfolio_snapshots')
+      .upsert(
+        {
+          profile_key:            PROFILE_KEY,
+          cash:                   specimenData.cash,
+          emergency_fund:         specimenData.emergencyFund,
+          health_coverage:        specimenData.healthCoverage,
+          retirement_investments: specimenData.retirementInvestments,
+          updated_at:             new Date().toISOString(),
+        },
+        { onConflict: 'profile_key' }
+      );
+
+    if (error) {
+      console.error('Supabase save error:', error);
+      setDbStatus('error');
+    } else {
+      setDbStatus('saved');
+      setTimeout(() => setDbStatus('idle'), 2500);
+    }
+  }, [specimenData]);
 
   const portfolioTotal =
     specimenData.cash +
@@ -99,6 +161,8 @@ export default function App() {
                 <PetriDishPortfolio
                   specimenData={specimenData}
                   setSpecimenData={setSpecimenData}
+                  onSave={savePortfolio}
+                  dbStatus={dbStatus}
                 />
               )}
             </motion.div>
@@ -114,7 +178,7 @@ export default function App() {
             <span className="text-stone-400 font-normal">Licensed Microbiologist · Pru Life UK Financial Advisor</span>
           </p>
           <p className="text-[10px] text-stone-400 mt-1 tracking-wide">
-            © 2026 · For educational purposes only · Calculations are illustrative and not financial advice · Data stays on your device
+            © 2026 · For educational purposes only · Calculations are illustrative and not financial advice
           </p>
         </footer>
       </main>
