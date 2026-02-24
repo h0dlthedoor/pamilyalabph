@@ -28,31 +28,14 @@ function NumericInput({ value, onChange, placeholder, className, name }) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function GapCalculator({ specimenData, onContactClick }) {
+export default function GapCalculator({ onContactClick }) {
   const [monthlyIncome,       setMonthlyIncome]       = useState(60000);
   const [dependents,          setDependents]          = useState(2);
   const [replacementYears,    setReplacementYears]    = useState(10);
   const [existingLifeCoverage, setExistingLifeCoverage] = useState(0);
-  const [existingHealthCoverage, setExistingHealthCoverage] = useState(
-    specimenData?.healthCoverage > 0 ? specimenData.healthCoverage : 0
-  );
-  const [currentEmergencyFund, setCurrentEmergencyFund] = useState(
-    specimenData?.emergencyFund > 0 ? specimenData.emergencyFund : 0
-  );
+  const [existingHealthCoverage, setExistingHealthCoverage] = useState(0);
+  const [currentEmergencyFund, setCurrentEmergencyFund] = useState(0);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
-
-  // Auto-fill from specimenData when it changes
-  useEffect(() => {
-    if (specimenData?.healthCoverage > 0) {
-      setExistingHealthCoverage(specimenData.healthCoverage);
-    }
-  }, [specimenData?.healthCoverage]);
-
-  useEffect(() => {
-    if (specimenData?.emergencyFund > 0) {
-      setCurrentEmergencyFund(specimenData.emergencyFund);
-    }
-  }, [specimenData?.emergencyFund]);
 
   // Rotate testimonials every 5s
   useEffect(() => {
