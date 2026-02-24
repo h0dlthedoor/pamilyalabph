@@ -305,7 +305,7 @@ export default function ExpirationCalculator({ portfolioTotal = 0, onContactClic
             )}
 
             {/* CTA */}
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 text-center space-y-3">
+            <div className="hidden md:block bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 text-center space-y-3">
               <p className="text-stone-900 font-bold text-base">
                 Gusto mong mapabilis ang runway mo?
               </p>

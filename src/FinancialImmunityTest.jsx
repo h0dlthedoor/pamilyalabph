@@ -256,7 +256,7 @@ export default function FinancialImmunityTest({ onContactClick }) {
                 </div>
 
                 {/* CTA */}
-                <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center space-y-4">
+                <div className="hidden md:block bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center space-y-4">
                   <div className="flex justify-center">
                     <CheckCircle2 className="w-8 h-8 text-amber-500" />
                   </div>

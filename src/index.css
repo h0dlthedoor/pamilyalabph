@@ -64,6 +64,22 @@ body::before {
   top: -2px;
 }
 
+/* ─── Touch Performance ──────────────────────────────────────────────────── */
+button, a, input, label, select {
+  touch-action: manipulation;
+}
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Haptic press — touch devices only */
+@media (pointer: coarse) {
+  .touch-feedback:active {
+    transform: scale(0.95);
+    transition: transform 0.06s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
 /* ─── Print / PDF Export ─────────────────────────────────────────────────── */
 @media print {
   @page { size: A4 portrait; margin: 15mm; }

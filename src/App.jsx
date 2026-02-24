@@ -103,7 +103,7 @@ export default function App() {
       {/* ── Navigation ─────────────────────────────────────────────────── */}
       <nav className="bg-white/90 backdrop-blur-sm border-b border-stone-200 shadow-sm sticky top-0 z-50 shrink-0 no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-3 sm:py-0 sm:h-18">
+          <div className="flex items-center justify-between h-14 md:h-18">
 
             {/* Logo */}
             <div className="flex items-center gap-2.5 shrink-0">
@@ -117,7 +117,7 @@ export default function App() {
                 </p>
               </div>
               {!clientView && (
-                <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[9px] font-mono text-emerald-600 uppercase tracking-wider ml-1">
+                <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[9px] font-mono text-emerald-600 uppercase tracking-wider ml-1">
                   Lab Certified
                 </span>
               )}
@@ -131,7 +131,7 @@ export default function App() {
             <div className="flex items-center gap-3">
               {/* Navigation Tabs — hidden in client view */}
               {!clientView && (
-                <div className="flex flex-wrap gap-1.5 sm:flex-nowrap bg-stone-100 p-1.5 rounded-2xl border border-stone-200 min-w-0">
+                <div className="hidden md:flex flex-wrap gap-1.5 sm:flex-nowrap bg-stone-100 p-1.5 rounded-2xl border border-stone-200 min-w-0">
                   {navItems.map((item) => (
                     <button
                       key={item.id}
@@ -160,7 +160,7 @@ export default function App() {
               {/* Eye / EyeOff toggle */}
               <button
                 onClick={() => setClientView(!clientView)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border ${
+                className={`touch-feedback flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border ${
                   clientView
                     ? 'bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-200'
                     : 'bg-stone-100 text-stone-500 border-stone-200 hover:text-stone-700 hover:bg-stone-200'
@@ -177,7 +177,7 @@ export default function App() {
 
       {/* ── Main Content ───────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-h-0 overflow-x-hidden relative z-10">
-        <div className="flex-1 min-h-0 overflow-auto">
+        <div className="flex-1 min-h-0 overflow-auto pb-40 md:pb-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -222,6 +222,40 @@ export default function App() {
           </p>
         </footer>
       </main>
+
+      {/* ── Mobile Bottom Bar ───────────────────────────────────────────── */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 no-print">
+        <div className="h-8 bg-gradient-to-t from-stone-50 to-transparent pointer-events-none" />
+        <div className="bg-white/95 backdrop-blur-sm border-t border-stone-200 px-4 pt-2"
+          style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+          {!clientView && (
+            <div className="flex justify-around mb-2.5">
+              {navItems.map(item => (
+                <button key={item.id} onClick={() => setActiveTab(item.id)}
+                  className={`touch-feedback flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-xl ${
+                    activeTab === item.id ? 'text-amber-600 bg-amber-50' : 'text-stone-400'
+                  }`}>
+                  {item.icon}
+                  <span className="text-[9px] font-semibold">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          <button onClick={() => setShowContact(true)}
+            className="touch-feedback cta-pulse w-full py-3.5 rounded-2xl font-bold text-stone-900 bg-amber-400 text-sm shadow-md">
+            Book Free Consultation · Libre
+          </button>
+        </div>
+      </div>
+
+      {/* ── Client View Watermark ───────────────────────────────────────── */}
+      {clientView && (
+        <div className="fixed bottom-20 md:bottom-6 inset-x-0 flex justify-center pointer-events-none z-30">
+          <span className="text-[9px] font-mono text-stone-400/60 uppercase tracking-[0.4em] select-none">
+            Protected by PamilyaSecure
+          </span>
+        </div>
+      )}
     </div>
   );
 }

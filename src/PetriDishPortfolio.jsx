@@ -214,6 +214,89 @@ function getDiagnostic(specimenData) {
   };
 }
 
+// ─── MicroDish (60px mobile thumbnail) ───────────────────────────────────────
+function MicroDish({ spec, value }) {
+  const pct      = Math.min(100, (value / spec.targetRef) * 100);
+  const depleted = value <= 0;
+  const colonyR  = depleted ? 3 : 3 + 11 * Math.min(1, Math.sqrt(value) / Math.sqrt(spec.targetRef));
+  const pulseScale = pct >= 70 ? 1.04 : pct >= 30 ? 1.03 : 1.015;
+
+  return (
+    <motion.div
+      className="w-[60px] h-[60px] shrink-0"
+      style={{ willChange: 'transform' }}
+      animate={{ scale: [1, pulseScale, 1] }}
+      transition={{ duration: pct >= 70 ? 4 : pct >= 30 ? 5 : 6, repeat: Infinity, ease: 'easeInOut' }}
+    >
+      <svg viewBox="0 0 100 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="46"
+          fill="rgba(255,255,255,0.82)"
+          stroke={depleted ? '#e2e8f0' : '#cbd5e1'}
+          strokeWidth="2.5" />
+        <circle cx="50" cy="50" r="42"
+          fill={depleted ? 'rgba(248,250,252,0.9)' : spec.agarLight} />
+        {!depleted && pct > 0 && (
+          <path d={sectorPath(50, 50, 42, pct)} fill={spec.agarMid} />
+        )}
+        <circle cx="50" cy="50" r={colonyR}
+          fill={depleted ? 'rgba(203,213,225,0.4)' : spec.colonyColor} />
+        {!depleted && pct > 0 && (
+          <path d={arcPath(50, 50, 45, pct)}
+            fill="none" stroke={spec.rimColor} strokeWidth="2" strokeLinecap="round" />
+        )}
+        <ellipse cx="30" cy="26" rx="8" ry="5"
+          fill="white" opacity="0.60" transform="rotate(-28 30 26)" />
+      </svg>
+    </motion.div>
+  );
+}
+
+// ─── Mobile Specimen Card ─────────────────────────────────────────────────────
+function MobileSpecimenCard({ spec, value, clientView, onChange }) {
+  const pct      = Math.min(100, (value / spec.targetRef) * 100);
+  const depleted = value <= 0;
+
+  return (
+    <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+      <div className="flex items-center gap-3 px-4 py-3">
+        <MicroDish spec={spec} value={value} />
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] font-mono font-bold tracking-widest uppercase leading-tight"
+            style={{ color: depleted ? '#94a3b8' : spec.inputAccent }}>
+            {spec.specimenId} · {spec.shortName}
+          </p>
+          <p className="text-2xl font-black tracking-tight leading-none mt-0.5"
+            style={{ color: depleted ? '#94a3b8' : spec.dishText }}>
+            {depleted ? '— —' : formatPHP(value)}
+          </p>
+          <p className="text-[10px] text-stone-400 mt-0.5">{spec.label}</p>
+          <div className="mt-1.5 h-1 bg-stone-100 rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${pct}%`, backgroundColor: spec.rimColor }} />
+          </div>
+          <p className="text-[9px] font-mono mt-0.5"
+            style={{ color: depleted ? '#94a3b8' : spec.rimColor }}>
+            {depleted ? 'NO DATA' : `${pct.toFixed(0)}% funded`}
+          </p>
+        </div>
+      </div>
+      {!clientView && (
+        <div className="bg-stone-50 border-t border-stone-100 px-4 py-2.5">
+          <input
+            type="number"
+            min="0"
+            value={value || ''}
+            onChange={onChange}
+            placeholder={spec.placeholder}
+            className="w-full text-right bg-transparent text-sm font-mono text-stone-700 placeholder:text-stone-300 focus:outline-none"
+          />
+          <p className="text-[9px] text-stone-400 mt-1">{spec.hint}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Petri Dish Widget ────────────────────────────────────────────────────────
 function PetriDishWidget({ spec, value, onChange, clientView }) {
   const pct      = Math.min(100, (value / spec.targetRef) * 100);
@@ -221,7 +304,7 @@ function PetriDishWidget({ spec, value, onChange, clientView }) {
   const colonyR  = depleted ? 3 : 3 + 11 * Math.min(1, Math.sqrt(value) / Math.sqrt(spec.targetRef));
 
   // Pulse animation params based on % funded
-  const pulseDuration = pct >= 70 ? 1.0 : pct >= 30 ? 2.2 : 4.0;
+  const pulseDuration = pct >= 70 ? 4 : pct >= 30 ? 5 : 6;
   const pulseScale    = pct >= 70 ? 1.04 : pct >= 30 ? 1.02 : 1.008;
   const glowColor     = depleted ? 'rgba(0,0,0,0.06)' : `${spec.rimColor}55`;
 
@@ -232,6 +315,7 @@ function PetriDishWidget({ spec, value, onChange, clientView }) {
         {/* ── Petri dish SVG ─────────────────────────────────────── */}
         <motion.div
           className="relative w-full"
+          style={{ willChange: 'transform' }}
           animate={{
             scale: [1, pulseScale, 1],
             filter: [
@@ -447,8 +531,22 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSa
             <span className="text-[9px] font-mono text-slate-400">{today}</span>
           </div>
 
-          {/* 2×2 petri dish grid */}
-          <div className="p-5">
+          {/* Mobile: stacked cards */}
+          <div className="md:hidden p-4 space-y-3">
+            {SPECIMENS.map(spec => (
+              <MobileSpecimenCard key={spec.id} spec={spec}
+                value={specimenData[spec.id] || 0} clientView={clientView}
+                onChange={(e) =>
+                  setSpecimenData((prev) => ({
+                    ...prev,
+                    [spec.id]: Math.max(0, Number(e.target.value) || 0),
+                  }))
+                } />
+            ))}
+          </div>
+
+          {/* Desktop: 2×2 grid */}
+          <div className="hidden md:block p-5">
             <div className="grid grid-cols-2 gap-5">
               {SPECIMENS.map((spec) => (
                 <PetriDishWidget
