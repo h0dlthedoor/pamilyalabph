@@ -15,12 +15,12 @@ const questions = [
     category: 'LIFE STAGE',
     icon: <Users className="w-10 h-10 text-blue-500 mb-5" />,
     text: 'Nasa anong yugto ka ng buhay mo?',
-    subtitle: 'Where are you in your financial life stage? This helps us give you the right picture.',
+    subtitle: 'This sets context for your results — your life stage doesn\'t add or subtract from your score.',
     options: [
-      { text: 'Single o bagong kasal – nagsisimula pa lang (20s–early 30s)', score: 20 },
+      { text: 'Single o bagong kasal – nagsisimula pa lang (20s–early 30s)', score: 15 },
       { text: 'May pamilya na, tumaas ang kita at gastos (30s–40s)', score: 15 },
-      { text: 'Approaching retirement, thinking ahead (40s–50s)', score: 10 },
-      { text: 'Near or at retirement – protecting what I\'ve built (50+)', score: 5 },
+      { text: 'Approaching retirement, thinking ahead (40s–50s)', score: 15 },
+      { text: 'Near or at retirement – protecting what I\'ve built (50+)', score: 15 },
     ],
   },
   {
@@ -31,7 +31,8 @@ const questions = [
     subtitle: 'Life insurance replaces your income for your family. Most experts recommend 5–10× your annual income.',
     options: [
       { text: 'Wala akong life insurance – hindi financially covered ang pamilya ko', score: 5 },
-      { text: 'Meron pero hindi ko sure kung sapat – group or employer coverage lang', score: 12 },
+      { text: 'Meron pero group/employer coverage lang – mawawala kapag umalis ako', score: 10 },
+      { text: 'May personal life insurance pero hindi ko sure kung sapat na', score: 15 },
       { text: 'May personal life insurance ako na at least 5–10× my annual income', score: 20 },
     ],
   },
@@ -43,8 +44,8 @@ const questions = [
     subtitle: 'Critical illness (cancer, stroke, heart attack) can cost ₱500K–₱3M in the Philippines. PhilHealth covers only a fraction.',
     options: [
       { text: 'PhilHealth lang — mataas ang out-of-pocket ko sa malaking sakit', score: 5 },
-      { text: 'May HMO ako sa trabaho — pero mawawala kapag nagpalit o natanggal ako', score: 12 },
-      { text: 'May HMO + critical illness rider/policy — covered kahit sa malubhang sakit', score: 20 },
+      { text: 'May HMO sa trabaho, at konting savings for medical', score: 12 },
+      { text: 'May sariling HMO + CI coverage na hindi tied sa employer', score: 20 },
     ],
   },
   {
@@ -54,9 +55,9 @@ const questions = [
     text: 'Kung mawalan ka ng trabaho ngayon, gaano katagal ang pamilya mo?',
     subtitle: 'An emergency fund in cash keeps your family afloat without borrowing. Target: 3–6 months of expenses.',
     options: [
-      { text: '3–6+ months ng buwanang gastos — naka-ipon sa cash o liquid savings', score: 20 },
-      { text: 'About 1–3 months lang — konti pa lang ang naitabi', score: 12 },
       { text: 'Wala pa — bahala na kung may mangyari (less than 1 month)', score: 5 },
+      { text: 'About 1–3 months lang — konti pa lang ang naitabi', score: 12 },
+      { text: '3–6+ months ng buwanang gastos — naka-ipon sa cash o liquid savings', score: 20 },
     ],
   },
   {
@@ -66,18 +67,18 @@ const questions = [
     text: 'Bukod sa SSS o GSIS, may sariling retirement plan ka na ba?',
     subtitle: 'SSS/GSIS averages ₱6K–₱18K/month payout. Most Filipino families need 3–5× more to maintain their lifestyle.',
     options: [
-      { text: 'Oo — may dedicated VUL, mutual fund, stocks, o retirement portfolio ako', score: 20 },
-      { text: 'Nagtitipid minsan pero mostly umaasa sa SSS/GSIS pa rin', score: 10 },
       { text: 'Wala pa — umaasa sa SSS/GSIS, lotto, o mga anak', score: 5 },
+      { text: 'Nagtitipid minsan pero mostly umaasa sa SSS/GSIS pa rin', score: 10 },
+      { text: 'Oo — may dedicated VUL, mutual fund, stocks, o retirement portfolio ako', score: 20 },
     ],
   },
 ];
 
 // ─── Score threshold per answer dot ──────────────────────────────────────────
-// Q1: 20/15/10/5  Q2–Q4: 20/12/5  Q5: 20/10/5
-// Using >= 18 for green, >= 10 for amber (covers Q5 middle score of 10)
+// Q1: flat 15  Q2: 5/10/15/20  Q3: 5/12/20  Q4: 5/12/20  Q5: 5/10/20
+// maxScore = 15 + 20 + 20 + 20 + 20 = 95
 function answerDotColor(pts) {
-  if (pts >= 18) return { bg: 'bg-emerald-100', dot: 'bg-emerald-500' };
+  if (pts >= 15) return { bg: 'bg-emerald-100', dot: 'bg-emerald-500' };
   if (pts >= 10) return { bg: 'bg-amber-100',   dot: 'bg-amber-500' };
   return            { bg: 'bg-red-100',          dot: 'bg-red-500' };
 }
@@ -124,14 +125,14 @@ export default function FinancialImmunityTest({ onContactClick }) {
   };
 
   const getDiagnosis = () => {
-    if (score >= 80) return {
+    if (score >= 75) return {
       label: 'Mataas ang Immunity', sublabel: 'High Financial Immunity',
       text: 'Maganda! Your family\'s financial foundation is strong. You\'re covering the major bases — life, health, emergency, and retirement. Keep building and reviewing annually.',
       color: 'text-emerald-700', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200',
       badgeColor: 'bg-emerald-100 text-emerald-700',
       icon: <ShieldCheck className="w-16 h-16 text-emerald-600" />,
     };
-    if (score >= 50) return {
+    if (score >= 45) return {
       label: 'Katamtamang Immunity', sublabel: 'Moderate Financial Immunity',
       text: 'You\'re on your way, but may gaps in coverage — especially in healthcare, life insurance, or retirement beyond SSS/GSIS. A focused plan can plug these holes.',
       color: 'text-amber-700', bgColor: 'bg-amber-50', borderColor: 'border-amber-200',
@@ -163,7 +164,7 @@ export default function FinancialImmunityTest({ onContactClick }) {
           <h2 className="text-white text-2xl font-bold leading-tight">
             Safe ba ang pamilya mo?
           </h2>
-          <p className="text-stone-300 text-sm mt-1">5 questions · 3 minutes · 100% private</p>
+          <p className="text-stone-300 text-sm mt-1">5 questions · 3 minutes · completely private</p>
         </div>
 
         <div className="p-6 sm:p-8">
@@ -225,7 +226,7 @@ export default function FinancialImmunityTest({ onContactClick }) {
                     <button
                       key={idx}
                       onClick={() => handleAnswer(option.score, option.text)}
-                      className="w-full p-4 text-left rounded-2xl bg-white border-2 border-stone-200 hover:border-amber-400 hover:bg-amber-50 transition-all group flex justify-between items-center"
+                      className="w-full p-4 text-left rounded-2xl bg-white border-2 border-stone-200 hover:border-amber-400 hover:bg-amber-50 transition-colors group flex justify-between items-center"
                     >
                       <span className="text-stone-700 font-medium text-sm sm:text-base group-hover:text-amber-900 leading-snug pr-3">
                         {option.text}
@@ -281,14 +282,14 @@ export default function FinancialImmunityTest({ onContactClick }) {
                   type="button"
                   onClick={handleDownloadCard}
                   disabled={generating}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm bg-stone-900 text-white hover:bg-stone-700 transition-all disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm bg-stone-900 text-white hover:bg-stone-700 transition-colors disabled:opacity-50"
                 >
                   {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                   {generating ? 'Generating...' : 'I-download ang Results'}
                 </button>
 
                 {/* CTA */}
-                <div className="hidden md:block bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center space-y-4">
+                <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center space-y-4">
                   <div className="flex justify-center">
                     <CheckCircle2 className="w-8 h-8 text-amber-500" />
                   </div>
@@ -312,7 +313,7 @@ export default function FinancialImmunityTest({ onContactClick }) {
                   <button
                     type="button"
                     onClick={onContactClick}
-                    className="cta-pulse w-full py-4 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-all duration-200 text-base"
+                    className="cta-pulse w-full py-4 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-[color,background-color,border-color,box-shadow] duration-200 text-base"
                   >
                     Simulan ang Free Consultation
                   </button>
@@ -355,12 +356,12 @@ export default function FinancialImmunityTest({ onContactClick }) {
           <div style={{
             textAlign: 'center', margin: '0 auto 28px', padding: '24px 40px',
             borderRadius: 20, width: '100%',
-            background: score >= 80 ? '#065f46' : score >= 50 ? '#92400e' : '#991b1b',
+            background: score >= 75 ? '#065f46' : score >= 45 ? '#92400e' : '#991b1b',
           }}>
             <p style={{ fontSize: 52, fontWeight: 900, margin: 0, color: '#fafaf9' }}>
               {score} / {maxScore}
             </p>
-            <p style={{ fontSize: 18, fontWeight: 700, margin: '4px 0 0', color: score >= 80 ? '#6ee7b7' : score >= 50 ? '#fde68a' : '#fca5a5' }}>
+            <p style={{ fontSize: 18, fontWeight: 700, margin: '4px 0 0', color: score >= 75 ? '#6ee7b7' : score >= 45 ? '#fde68a' : '#fca5a5' }}>
               {dx.label}
             </p>
             <p style={{ fontSize: 13, margin: '4px 0 0', color: 'rgba(255,255,255,0.6)' }}>
@@ -382,7 +383,7 @@ export default function FinancialImmunityTest({ onContactClick }) {
               }}>
                 <div style={{
                   width: 16, height: 16, borderRadius: '50%', flexShrink: 0, marginTop: 3,
-                  background: ans.pts >= 18 ? '#10b981' : ans.pts >= 10 ? '#f59e0b' : '#ef4444',
+                  background: ans.pts >= 15 ? '#10b981' : ans.pts >= 10 ? '#f59e0b' : '#ef4444',
                 }} />
                 <div>
                   <p style={{ fontSize: 11, fontFamily: 'monospace', color: '#a8a29e', margin: 0, letterSpacing: 1 }}>

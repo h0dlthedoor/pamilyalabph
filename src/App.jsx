@@ -53,6 +53,18 @@ export default function App() {
     setActiveTab('immunity');
   };
 
+  // ── Escape key closes modals ────────────────────────────────────────────
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        if (showLogin) setShowLogin(false);
+        if (showContact) setShowContact(false);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [showLogin, showContact]);
+
   // ── Nav items (admin only when authenticated) ─────────────────────────────
   const navItems = [
     { id: 'immunity', label: 'Immunity Test',  icon: <Activity   className="w-4 h-4" /> },
@@ -88,7 +100,8 @@ export default function App() {
               <div className="bg-gradient-to-r from-stone-900 via-stone-800 to-amber-900 px-6 py-5 relative">
                 <button
                   onClick={() => setShowLogin(false)}
-                  className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                  className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                  aria-label="Close"
                 >
                   <X className="w-4 h-4 text-white" />
                 </button>
@@ -106,7 +119,7 @@ export default function App() {
                     type="email"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                    className="w-full bg-white border-2 border-stone-200 text-stone-800 px-4 py-3 rounded-xl text-sm font-medium focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+                    className="w-full bg-white border-2 border-stone-200 text-stone-800 px-4 py-3 rounded-xl text-sm font-medium focus-visible:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
                     autoFocus
                     required
                   />
@@ -117,7 +130,7 @@ export default function App() {
                     type="password"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
-                    className="w-full bg-white border-2 border-stone-200 text-stone-800 px-4 py-3 rounded-xl text-sm font-medium focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
+                    className="w-full bg-white border-2 border-stone-200 text-stone-800 px-4 py-3 rounded-xl text-sm font-medium focus-visible:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors"
                     required
                   />
                 </div>
@@ -129,7 +142,7 @@ export default function App() {
                 <button
                   type="submit"
                   disabled={loginLoading}
-                  className="w-full py-3.5 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md transition-all text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md transition-colors text-sm disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {loginLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing in...</> : 'Sign In'}
                 </button>
@@ -164,7 +177,7 @@ export default function App() {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`relative px-4 sm:px-5 py-2 rounded-xl flex items-center gap-2 text-xs sm:text-sm font-medium transition-all duration-300 shrink-0 ${
+                    className={`relative px-4 sm:px-5 py-2 rounded-xl flex items-center gap-2 text-xs sm:text-sm font-medium transition-colors duration-300 shrink-0 ${
                       activeTab === item.id
                         ? 'text-amber-700'
                         : 'text-stone-500 hover:text-stone-700'
@@ -188,8 +201,9 @@ export default function App() {
               {!session ? (
                 <button
                   onClick={() => setShowLogin(true)}
-                  className="touch-feedback flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all border bg-stone-100 text-stone-500 border-stone-200 hover:text-stone-700 hover:bg-stone-200"
+                  className="touch-feedback flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors border bg-stone-100 text-stone-500 border-stone-200 hover:text-stone-700 hover:bg-stone-200"
                   title="Admin Login"
+                  aria-label="Admin Login"
                 >
                   <Lock className="w-4 h-4" />
                 </button>

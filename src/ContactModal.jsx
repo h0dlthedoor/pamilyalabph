@@ -1,8 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, FlaskConical } from 'lucide-react';
 
 export default function ContactModal({ isOpen, onClose }) {
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [isOpen, onClose]);
   const handleViber = () => {
     window.location.href = 'viber://chat?number=%2B639156373238';
     setTimeout(() => window.open('https://viber.click/639156373238', '_blank'), 1500);
@@ -34,7 +40,8 @@ export default function ContactModal({ isOpen, onClose }) {
             <div className="bg-gradient-to-r from-stone-900 via-stone-800 to-amber-900 px-6 py-5 relative">
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                aria-label="Close"
               >
                 <X className="w-4 h-4 text-white" />
               </button>
@@ -64,7 +71,7 @@ export default function ContactModal({ isOpen, onClose }) {
               {/* Viber */}
               <button
                 onClick={handleViber}
-                className="w-full flex items-center justify-center gap-3 py-4 px-5 rounded-xl font-bold text-white transition-all duration-200 hover:brightness-110 active:scale-95"
+                className="w-full flex items-center justify-center gap-3 py-4 px-5 rounded-xl font-bold text-white transition-colors duration-200 hover:brightness-110 active:scale-95"
                 style={{ background: 'linear-gradient(135deg, #7C4DFF 0%, #5C35CC 100%)' }}
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -78,7 +85,7 @@ export default function ContactModal({ isOpen, onClose }) {
                 href="https://www.facebook.com/kris.pasiona"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-3 py-4 px-5 rounded-xl font-bold text-white transition-all duration-200 hover:brightness-110 active:scale-95"
+                className="w-full flex items-center justify-center gap-3 py-4 px-5 rounded-xl font-bold text-white transition-colors duration-200 hover:brightness-110 active:scale-95"
                 style={{ background: 'linear-gradient(135deg, #1877F2 0%, #0d5cb8 100%)' }}
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">

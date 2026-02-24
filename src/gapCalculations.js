@@ -2,17 +2,21 @@
 // 5-Pillar Financial Needs Analysis — Pure calculation engine
 
 export const PH_INFLATION = 0.05;
+export const ASSUMED_RETURN = 0.07;
 export const EXPENSE_RATIO = 0.7;
 export const RETIREMENT_REPLACEMENT = 0.7;
 export const SSS_MONTHLY = 12000;
 export const LIFE_EXPECTANCY = 85;
 export const EDUCATION_COSTS = { state: 400000, private: 1200000, topTier: 2000000 };
 
-// Sum of (1 + rate)^i for i=1..years — inflation-adjusted annuity factor
-export function inflationFactor(years, rate = PH_INFLATION) {
-  let sum = 0;
-  for (let i = 1; i <= years; i++) sum += Math.pow(1 + rate, i);
-  return sum;
+// Net real rate: (1 + nominal return) / (1 + inflation) - 1
+const NET_REAL_RATE = (1 + ASSUMED_RETURN) / (1 + PH_INFLATION) - 1;
+
+// Present Value annuity factor: (1 - (1 + r)^-n) / r
+export function pvRealFactor(years) {
+  if (years <= 0) return 0;
+  const r = NET_REAL_RATE;
+  return (1 - Math.pow(1 + r, -years)) / r;
 }
 
 // Clamp helper
@@ -23,7 +27,7 @@ function clamp(val, min, max) {
 // Pillar 1: Life Insurance (DIME Method)
 export function calcLife({ age, monthlyIncome, outstandingDebts, mortgageBalance, educationNeed }) {
   const replacementYears = clamp(65 - age, 5, 30);
-  const factor = inflationFactor(replacementYears);
+  const factor = pvRealFactor(replacementYears);
   const incomeNeed = monthlyIncome * 12 * factor;
   const need = outstandingDebts + incomeNeed + mortgageBalance + educationNeed;
   return { need, replacementYears };
@@ -65,7 +69,7 @@ export function calcRetirement({ monthlyIncome, retirementAge }) {
   const sssAnnual = SSS_MONTHLY * 12;
   const yearsInRetirement = Math.max(0, LIFE_EXPECTANCY - retirementAge);
   const annualGap = Math.max(0, annualNeed - sssAnnual);
-  const factor = inflationFactor(yearsInRetirement);
+  const factor = pvRealFactor(yearsInRetirement);
   const need = annualGap * factor;
   return { need, annualNeed, yearsInRetirement, annualGap };
 }

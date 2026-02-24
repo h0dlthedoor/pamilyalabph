@@ -23,6 +23,7 @@ function NumericInput({ value, onChange, placeholder, className, name }) {
   return (
     <input
       type="number"
+      inputMode="numeric"
       min="0"
       value={str}
       onChange={(e) => { setStr(e.target.value); onChange(e); }}
@@ -101,7 +102,7 @@ export default function GapCalculator({ onContactClick }) {
   const goBack = () => setStep((s) => Math.max(s - 1, 0));
   const restart = () => setStep(0);
 
-  const inputCls = "w-full bg-white border border-stone-200 text-stone-800 px-3 py-2.5 rounded-xl text-sm focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors";
+  const inputCls = "w-full bg-white border border-stone-200 text-stone-800 px-3 py-2.5 rounded-xl text-sm focus-visible:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-colors";
 
   // ── Card color helper ───────────────────────────────────────────────────────
   const cardColor = (pct, applicable) => {
@@ -204,7 +205,7 @@ export default function GapCalculator({ onContactClick }) {
                       <div className="flex gap-3">
                         {[{ val: true, label: 'Oo, may trabaho' }, { val: false, label: 'Hindi / Solo income' }].map(opt => (
                           <button key={String(opt.val)} type="button" onClick={() => setSpouseWorking(opt.val)}
-                            className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium border-2 transition-all ${
+                            className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium border-2 transition-colors ${
                               spouseWorking === opt.val
                                 ? 'bg-amber-400 border-amber-400 text-stone-900'
                                 : 'bg-white border-stone-200 text-stone-600 hover:border-amber-300'
@@ -329,7 +330,7 @@ export default function GapCalculator({ onContactClick }) {
                             { val: 'topTier', label: 'Top-Tier', sub: formatShort(EDUCATION_COSTS.topTier) },
                           ].map(opt => (
                             <button key={opt.val} type="button" onClick={() => setSchoolType(opt.val)}
-                              className={`flex-1 py-3 px-3 rounded-xl text-sm font-medium border-2 transition-all ${
+                              className={`flex-1 py-3 px-3 rounded-xl text-sm font-medium border-2 transition-colors ${
                                 schoolType === opt.val
                                   ? 'bg-amber-400 border-amber-400 text-stone-900'
                                   : 'bg-white border-stone-200 text-stone-600 hover:border-amber-300'
@@ -361,12 +362,12 @@ export default function GapCalculator({ onContactClick }) {
                 <div className="flex gap-3 pt-2">
                   {step > 0 && (
                     <button type="button" onClick={goBack}
-                      className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-sm font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 border border-stone-200 transition-all">
+                      className="flex items-center gap-1.5 px-5 py-3 rounded-xl text-sm font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 border border-stone-200 transition-colors">
                       <ChevronLeft className="w-4 h-4" /> Back
                     </button>
                   )}
                   <button type="button" onClick={goNext}
-                    className="cta-pulse flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-all text-sm">
+                    className="cta-pulse flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-[color,background-color,border-color,box-shadow] text-sm">
                     {step < 2 ? (
                       <>Next <ChevronRight className="w-4 h-4" /></>
                     ) : (
@@ -436,11 +437,11 @@ export default function GapCalculator({ onContactClick }) {
                           <div className="grid grid-cols-2 gap-3 mb-3">
                             <div>
                               <p className="text-[10px] text-stone-400 uppercase tracking-wider mb-0.5">Need</p>
-                              <p className="text-sm font-bold text-blue-700">{formatPHP(p.need)}</p>
+                              <p className="text-sm font-bold text-blue-700 tabular-nums">{formatPHP(p.need)}</p>
                             </div>
                             <div>
                               <p className="text-[10px] text-stone-400 uppercase tracking-wider mb-0.5">Have</p>
-                              <p className="text-sm font-bold text-blue-700">{formatPHP(p.have)}</p>
+                              <p className="text-sm font-bold text-blue-700 tabular-nums">{formatPHP(p.have)}</p>
                             </div>
                           </div>
 
@@ -458,7 +459,7 @@ export default function GapCalculator({ onContactClick }) {
 
                           <div className="text-center">
                             {p.gap > 0 ? (
-                              <p className={`text-lg font-black ${p.pct >= 50 ? 'text-amber-700' : 'text-red-600'}`}>
+                              <p className={`text-lg font-black tabular-nums ${p.pct >= 50 ? 'text-amber-700' : 'text-red-600'}`}>
                                 KULANG: {formatPHP(p.gap)}
                               </p>
                             ) : (
@@ -472,7 +473,7 @@ export default function GapCalculator({ onContactClick }) {
                 })}
 
                 {/* CTA */}
-                <div className="hidden md:block bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 text-center space-y-3">
+                <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 text-center space-y-3">
                   <p className="text-stone-900 font-bold text-base">
                     Gusto mong i-close ang coverage gaps?
                   </p>
@@ -488,7 +489,7 @@ export default function GapCalculator({ onContactClick }) {
                     </p>
                   </div>
                   <button type="button" onClick={onContactClick}
-                    className="cta-pulse w-full py-3.5 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-all duration-200">
+                    className="cta-pulse w-full py-3.5 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-[color,background-color,border-color,box-shadow] duration-200">
                     I-close ang Gaps — Libre
                   </button>
                 </div>
