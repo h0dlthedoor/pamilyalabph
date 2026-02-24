@@ -2,7 +2,7 @@ import React, { useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Microscope, CheckCircle2, AlertCircle, AlertTriangle, Clock,
-  Dna, FlaskConical, Save, Loader2, CloudOff, Download,
+  Dna, FlaskConical, Loader2, CloudOff, Download,
 } from 'lucide-react';
 import { formatPHP, formatShort } from './utils';
 
@@ -506,7 +506,7 @@ function PetriDishWidget({ spec, value, onChange, clientView }) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSave, dbStatus, clientView }) {
+export default function PetriDishPortfolio({ specimenData, setSpecimenData, dbStatus, clientView }) {
   const portfolioTotal = SPECIMENS.reduce((s, sp) => s + (specimenData[sp.id] || 0), 0);
   const diagnostic     = useMemo(() => getDiagnostic(specimenData), [specimenData]);
   const { Icon }       = diagnostic;
@@ -598,7 +598,7 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSa
             </div>
           </div>
 
-          {/* Total footer + Save + Print */}
+          {/* Total footer + Save as PDF */}
           <div className="border-t border-slate-200 bg-slate-50 px-5 py-3 space-y-2">
             <div className="flex justify-between items-center gap-3">
               <div className="min-w-0">
@@ -608,35 +608,23 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSa
               <span className="text-xl font-black text-amber-500 shrink-0">{formatPHP(portfolioTotal)}</span>
             </div>
             {!clientView && (
-              <div className="no-print flex gap-2">
+              <div className="no-print flex items-center gap-2">
                 <button
                   onClick={() => window.print()}
                   className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition-all"
                 >
                   <Download className="w-3 h-3" />
-                  Download Lab Results
+                  Save as PDF
                 </button>
-                <button
-                  onClick={onSave}
-                  disabled={dbStatus === 'saving' || dbStatus === 'loading'}
-                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all ${
-                    dbStatus === 'saved'
-                      ? 'bg-emerald-500 text-white'
-                      : dbStatus === 'error'
-                      ? 'bg-red-100 text-red-600 border border-red-200'
-                      : 'bg-slate-900 text-white hover:bg-slate-700'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {dbStatus === 'saving' && <Loader2 className="w-3 h-3 animate-spin" />}
-                  {dbStatus === 'saved'  && <CheckCircle2 className="w-3 h-3" />}
-                  {dbStatus === 'error'  && <CloudOff className="w-3 h-3" />}
-                  {dbStatus !== 'saving' && dbStatus !== 'saved' && dbStatus !== 'error' && (
-                    <Save className="w-3 h-3" />
-                  )}
-                  {dbStatus === 'saving' ? 'Saving…' :
-                   dbStatus === 'saved'  ? 'Saved'   :
-                   dbStatus === 'error'  ? 'Error'   : 'Save'}
-                </button>
+                {dbStatus === 'saving' && (
+                  <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin shrink-0" />
+                )}
+                {dbStatus === 'saved' && (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                )}
+                {dbStatus === 'error' && (
+                  <CloudOff className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                )}
               </div>
             )}
           </div>

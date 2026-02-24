@@ -110,16 +110,20 @@ export default function FinancialImmunityTest({ onContactClick }) {
   };
 
   const saveLead = async (skip = false) => {
-    const finalScore = score;
     if (!skip && leadName.trim()) {
       setLeadSaving(true);
-      await supabase.from('quiz_leads').insert({
-        first_name: leadName.trim(),
-        mobile: leadMobile.trim() || null,
-        score: finalScore,
-        answers_json: answers,
-      }).catch(() => {});
-      setLeadSaving(false);
+      try {
+        await supabase.from('quiz_leads').insert({
+          first_name: leadName.trim(),
+          mobile: leadMobile.trim() || null,
+          score,
+          answers_json: answers,
+        });
+      } catch (_) {
+        // Silently fail — don't block results
+      } finally {
+        setLeadSaving(false);
+      }
     }
     setShowLeadCapture(false);
     setShowResult(true);

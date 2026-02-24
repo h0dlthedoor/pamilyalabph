@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Timer, Microscope, Beaker, Eye, EyeOff } from 'lucide-react';
 import PetriDishPortfolio from './PetriDishPortfolio';
@@ -58,30 +58,46 @@ export default function App() {
     loadPortfolio();
   }, []);
 
-  // ── Save / upsert to Supabase ────────────────────────────────────────────
-  const savePortfolio = useCallback(async () => {
-    setDbStatus('saving');
-    const { error } = await supabase
-      .from('portfolio_snapshots')
-      .upsert(
-        {
-          profile_key:            PROFILE_KEY,
-          cash:                   specimenData.cash,
-          emergency_fund:         specimenData.emergencyFund,
-          health_coverage:        specimenData.healthCoverage,
-          retirement_investments: specimenData.retirementInvestments,
-          updated_at:             new Date().toISOString(),
-        },
-        { onConflict: 'profile_key' }
-      );
+  // ── Auto-save to Supabase (debounced 1.5s after last edit) ──────────────
+  const saveTimer = useRef(null);
+  const initialLoad = useRef(true);
 
-    if (error) {
-      setDbStatus('error');
-    } else {
-      setDbStatus('saved');
-      setTimeout(() => setDbStatus('idle'), 2500);
+  useEffect(() => {
+    // Skip auto-save on initial mount (data comes from DB)
+    if (initialLoad.current) {
+      initialLoad.current = false;
+      return;
     }
-  }, [specimenData]);
+    // Skip if all zeros (no data entered yet)
+    const total = specimenData.cash + specimenData.emergencyFund + specimenData.healthCoverage + specimenData.retirementInvestments;
+    if (total === 0) return;
+
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      setDbStatus('saving');
+      const { error } = await supabase
+        .from('portfolio_snapshots')
+        .upsert(
+          {
+            profile_key:            PROFILE_KEY,
+            cash:                   specimenData.cash,
+            emergency_fund:         specimenData.emergencyFund,
+            health_coverage:        specimenData.healthCoverage,
+            retirement_investments: specimenData.retirementInvestments,
+            updated_at:             new Date().toISOString(),
+          },
+          { onConflict: 'profile_key' }
+        );
+      if (error) {
+        setDbStatus('error');
+      } else {
+        setDbStatus('saved');
+        setTimeout(() => setDbStatus('idle'), 2500);
+      }
+    }, 1500);
+
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
+  }, [specimenData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const portfolioTotal =
     specimenData.cash +
@@ -200,7 +216,6 @@ export default function App() {
                 <PetriDishPortfolio
                   specimenData={specimenData}
                   setSpecimenData={setSpecimenData}
-                  onSave={savePortfolio}
                   dbStatus={dbStatus}
                   clientView={clientView}
                 />

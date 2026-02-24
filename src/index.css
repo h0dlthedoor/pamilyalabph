@@ -85,6 +85,19 @@ button, a, input, label, select {
   @page { size: A4 portrait; margin: 15mm; }
   nav, footer, .no-print { display: none !important; }
   body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .scan-line, .animate-pulse { display: none !important; }
+  body::before { display: none !important; }
+  .bg-noise { background-image: none !important; }
+  .scan-line, .animate-pulse, .cta-pulse { display: none !important; }
   main { overflow: visible !important; height: auto !important; }
+  /* Kill all animations to prevent blank pages */
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  /* Prevent extra blank page from flex/overflow */
+  .min-h-screen { min-height: auto !important; }
+  .flex-1 { flex: none !important; }
+  .pb-40 { padding-bottom: 0 !important; }
+  .overflow-auto, .overflow-hidden, .overflow-x-hidden { overflow: visible !important; }
+  .aspect-square { aspect-ratio: auto !important; max-height: 400px !important; }
 }
