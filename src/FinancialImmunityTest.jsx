@@ -81,7 +81,7 @@ function answerDotColor(pts) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function FinancialImmunityTest() {
+export default function FinancialImmunityTest({ onContactClick }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
@@ -270,6 +270,7 @@ export default function FinancialImmunityTest() {
                   </div>
                   <button
                     type="button"
+                    onClick={onContactClick}
                     className="cta-pulse w-full py-4 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-all duration-200 text-base"
                   >
                     Simulan ang Free Consultation

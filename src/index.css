@@ -63,3 +63,12 @@ body::before {
   animation: scan-sweep 5s linear infinite;
   top: -2px;
 }
+
+/* ─── Print / PDF Export ─────────────────────────────────────────────────── */
+@media print {
+  @page { size: A4 portrait; margin: 15mm; }
+  nav, footer, .no-print { display: none !important; }
+  body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .scan-line, .animate-pulse { display: none !important; }
+  main { overflow: visible !important; height: auto !important; }
+}

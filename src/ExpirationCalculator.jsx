@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Info, Calculator }
 import { formatPHP } from './utils';
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function ExpirationCalculator({ portfolioTotal = 0 }) {
+export default function ExpirationCalculator({ portfolioTotal = 0, onContactClick }) {
   const [currentAge,      setCurrentAge]      = useState(35);
   const [targetAge,       setTargetAge]       = useState(85);
   const [startingCapital, setStartingCapital] = useState(3000000);
@@ -314,6 +314,7 @@ export default function ExpirationCalculator({ portfolioTotal = 0 }) {
               </p>
               <button
                 type="button"
+                onClick={onContactClick}
                 className="cta-pulse w-full py-3.5 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-all duration-200"
               >
                 Book a Free Consultation

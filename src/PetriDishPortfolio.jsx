@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Microscope, CheckCircle2, AlertCircle, AlertTriangle, Clock,
-  Dna, FlaskConical, Save, Loader2, CloudOff,
+  Dna, FlaskConical, Save, Loader2, CloudOff, Download,
 } from 'lucide-react';
 import { formatPHP, formatShort } from './utils';
 
@@ -42,11 +42,6 @@ function nodeRadius(value) {
 }
 
 // ─── Specimen config ──────────────────────────────────────────────────────────
-// Agar color palette inspired by real microbiological culture media:
-//  SP-001 CASH      → LB Agar (pale cream/blue)
-//  SP-002 EMERG     → MacConkey Agar (amber/salmon)
-//  SP-003 HEALTH    → Blood Agar (green tint)
-//  SP-004 RETIRE    → Chocolate Agar (purple)
 const SPECIMENS = [
   {
     id: 'cash',
@@ -56,14 +51,12 @@ const SPECIMENS = [
     placeholder: '500000',
     hint: 'Bank savings, time deposits, GCash',
     cx: 25, cy: 30,
-    // Petri dish colors
     agarLight:   'rgba(219,234,254,0.65)',
     agarMid:     'rgba(96,165,250,0.30)',
     colonyColor: 'rgba(37,99,235,0.75)',
     rimColor:    '#60a5fa',
     dishText:    '#1e40af',
     inputAccent: '#3b82f6',
-    // Molecular graph
     nodeStroke: 'rgba(96,165,250,0.80)', nodeFill: 'rgba(96,165,250,0.18)',
     nodeGlow:   'rgba(96,165,250,0.45)', labelColor: '#93c5fd',
     arcColor: '#60a5fa', animClass: 'node-float-1',
@@ -222,148 +215,181 @@ function getDiagnostic(specimenData) {
 }
 
 // ─── Petri Dish Widget ────────────────────────────────────────────────────────
-function PetriDishWidget({ spec, value, onChange }) {
+function PetriDishWidget({ spec, value, onChange, clientView }) {
   const pct      = Math.min(100, (value / spec.targetRef) * 100);
   const depleted = value <= 0;
   const colonyR  = depleted ? 3 : 3 + 11 * Math.min(1, Math.sqrt(value) / Math.sqrt(spec.targetRef));
 
+  // Pulse animation params based on % funded
+  const pulseDuration = pct >= 70 ? 1.0 : pct >= 30 ? 2.2 : 4.0;
+  const pulseScale    = pct >= 70 ? 1.04 : pct >= 30 ? 1.02 : 1.008;
+  const glowColor     = depleted ? 'rgba(0,0,0,0.06)' : `${spec.rimColor}55`;
+
   return (
-    <div className="flex flex-col items-center gap-2 min-w-0">
+    <div className="rounded-2xl p-2 bg-gradient-to-br from-white/60 to-white/20 backdrop-blur-sm border border-white/40 shadow-lg">
+      <div className="flex flex-col items-center gap-2 min-w-0">
 
-      {/* ── Petri dish SVG ─────────────────────────────────────── */}
-      <div className="relative w-full" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.10))' }}>
-        <svg viewBox="0 0 100 100" className="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+        {/* ── Petri dish SVG ─────────────────────────────────────── */}
+        <motion.div
+          className="relative w-full"
+          animate={{
+            scale: [1, pulseScale, 1],
+            filter: [
+              `drop-shadow(0 4px 8px rgba(0,0,0,0.10))`,
+              `drop-shadow(0 6px 12px rgba(0,0,0,0.14)) drop-shadow(0 0 8px ${glowColor})`,
+              `drop-shadow(0 4px 8px rgba(0,0,0,0.10))`,
+            ],
+          }}
+          transition={{ duration: pulseDuration, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
 
-          {/* Outer glass body */}
-          <circle cx="50" cy="50" r="46"
-            fill="white"
-            stroke={depleted ? '#e2e8f0' : '#cbd5e1'}
-            strokeWidth="2.5"
-          />
-
-          {/* Agar medium base (always shown when not depleted) */}
-          {!depleted && (
-            <circle cx="50" cy="50" r="42" fill={spec.agarLight} />
-          )}
-          {depleted && (
-            <circle cx="50" cy="50" r="42" fill="rgba(248,250,252,0.9)" />
-          )}
-
-          {/* Agar sector fill — funded % */}
-          {!depleted && pct > 0 && (
-            <path d={sectorPath(50, 50, 42, pct)} fill={spec.agarMid} />
-          )}
-
-          {/* Agar texture dots (simulates culture medium granularity) */}
-          {!depleted && DISH_TEXTURE.map((dot, i) => (
-            <circle key={i} cx={dot.cx} cy={dot.cy} r={dot.r}
-              fill={spec.agarMid} opacity="0.45"
+            {/* Outer glass body */}
+            <circle cx="50" cy="50" r="46"
+              fill="rgba(255,255,255,0.82)"
+              stroke={depleted ? '#e2e8f0' : '#cbd5e1'}
+              strokeWidth="2.5"
             />
-          ))}
 
-          {/* Colony body — grows with value */}
-          <circle cx="50" cy="50" r={colonyR}
-            fill={depleted ? 'rgba(203,213,225,0.4)' : spec.colonyColor}
-          />
-          {/* Colony inner highlight */}
-          {!depleted && (
-            <circle cx={50 - colonyR * 0.28} cy={50 - colonyR * 0.28} r={colonyR * 0.35}
-              fill="rgba(255,255,255,0.35)"
+            {/* Agar medium base */}
+            {!depleted && (
+              <circle cx="50" cy="50" r="42" fill={spec.agarLight} />
+            )}
+            {depleted && (
+              <circle cx="50" cy="50" r="42" fill="rgba(248,250,252,0.9)" />
+            )}
+
+            {/* Agar sector fill — funded % */}
+            {!depleted && pct > 0 && (
+              <path d={sectorPath(50, 50, 42, pct)} fill={spec.agarMid} />
+            )}
+
+            {/* Agar texture dots */}
+            {!depleted && DISH_TEXTURE.map((dot, i) => (
+              <circle key={i} cx={dot.cx} cy={dot.cy} r={dot.r}
+                fill={spec.agarMid} opacity="0.45"
+              />
+            ))}
+
+            {/* Colony body */}
+            <circle cx="50" cy="50" r={colonyR}
+              fill={depleted ? 'rgba(203,213,225,0.4)' : spec.colonyColor}
             />
-          )}
+            {/* Colony inner highlight */}
+            {!depleted && (
+              <circle cx={50 - colonyR * 0.28} cy={50 - colonyR * 0.28} r={colonyR * 0.35}
+                fill="rgba(255,255,255,0.35)"
+              />
+            )}
 
-          {/* Progress arc track */}
-          <circle cx="50" cy="50" r="45"
-            fill="none"
-            stroke={depleted ? 'rgba(203,213,225,0.3)' : 'rgba(0,0,0,0.06)'}
-            strokeWidth="1.5"
-          />
-          {/* Progress arc fill */}
-          {!depleted && pct > 0 && (
-            <path d={arcPath(50, 50, 45, pct)}
-              fill="none" stroke={spec.rimColor} strokeWidth="2" strokeLinecap="round"
+            {/* Progress arc track */}
+            <circle cx="50" cy="50" r="45"
+              fill="none"
+              stroke={depleted ? 'rgba(203,213,225,0.3)' : 'rgba(0,0,0,0.06)'}
+              strokeWidth="1.5"
             />
+            {/* Progress arc fill */}
+            {!depleted && pct > 0 && (
+              <path d={arcPath(50, 50, 45, pct)}
+                fill="none" stroke={spec.rimColor} strokeWidth="2" strokeLinecap="round"
+              />
+            )}
+
+            {/* Glass rim inner shadow ring */}
+            <circle cx="50" cy="50" r="44"
+              fill="none"
+              stroke="rgba(0,0,0,0.05)"
+              strokeWidth="1"
+            />
+
+            {/* Specular highlights — simulate glass curvature */}
+            <ellipse cx="30" cy="26" rx="8" ry="5"
+              fill="white" opacity="0.60"
+              transform="rotate(-28 30 26)"
+            />
+            <ellipse cx="37" cy="22" rx="3.5" ry="2"
+              fill="white" opacity="0.40"
+              transform="rotate(-28 37 22)"
+            />
+
+            {/* Light refraction near bottom rim */}
+            <ellipse cx="50" cy="80" rx="14" ry="4.5"
+              fill="white" opacity="0.28"
+            />
+
+            {/* Value text */}
+            <text x="50" y="46"
+              textAnchor="middle"
+              fill={depleted ? '#94a3b8' : spec.dishText}
+              fontSize="10" fontFamily="monospace" fontWeight="bold"
+            >
+              {depleted ? '— —' : formatShort(value)}
+            </text>
+
+            {/* Percent label */}
+            <text x="50" y="58.5"
+              textAnchor="middle"
+              fill={depleted ? '#94a3b8' : spec.rimColor}
+              fontSize="6.5" fontFamily="monospace" opacity="0.85"
+            >
+              {depleted ? 'NO DATA' : `${pct.toFixed(0)}% FUNDED`}
+            </text>
+          </svg>
+
+          {/* 100% funded checkmark badge */}
+          {pct >= 100 && (
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-md border-2 border-white">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
           )}
+        </motion.div>
 
-          {/* Glass rim inner shadow ring */}
-          <circle cx="50" cy="50" r="44"
-            fill="none"
-            stroke="rgba(0,0,0,0.05)"
-            strokeWidth="1"
-          />
-
-          {/* Specular highlights — simulate glass curvature */}
-          <ellipse cx="30" cy="26" rx="8" ry="5"
-            fill="white" opacity="0.60"
-            transform="rotate(-28 30 26)"
-          />
-          <ellipse cx="37" cy="22" rx="3.5" ry="2"
-            fill="white" opacity="0.40"
-            transform="rotate(-28 37 22)"
-          />
-
-          {/* Value text */}
-          <text x="50" y="46"
-            textAnchor="middle"
-            fill={depleted ? '#94a3b8' : spec.dishText}
-            fontSize="10" fontFamily="monospace" fontWeight="bold"
+        {/* ── Specimen label ─────────────────────────────────────── */}
+        <div className="text-center w-full">
+          <p className="text-[9px] font-mono font-bold tracking-widest uppercase leading-tight"
+            style={{ color: depleted ? '#94a3b8' : spec.inputAccent }}
           >
-            {depleted ? '— —' : formatShort(value)}
-          </text>
+            {spec.specimenId} · {spec.shortName}
+          </p>
+          <p className="text-[9px] text-slate-400 font-mono leading-tight mt-0.5 truncate px-1">
+            {spec.label}
+          </p>
+        </div>
 
-          {/* Percent label */}
-          <text x="50" y="58.5"
-            textAnchor="middle"
-            fill={depleted ? '#94a3b8' : spec.rimColor}
-            fontSize="6.5" fontFamily="monospace" opacity="0.85"
-          >
-            {depleted ? 'NO DATA' : `${pct.toFixed(0)}% FUNDED`}
-          </text>
-        </svg>
-
-        {/* 100% funded checkmark badge */}
-        {pct >= 100 && (
-          <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-md border-2 border-white">
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+        {/* ── Input (edit mode) or read-only display (client view) ── */}
+        {clientView ? (
+          <div className="w-full px-1 py-1 text-center">
+            <p className="text-sm font-mono font-bold"
+              style={{ color: depleted ? '#94a3b8' : spec.inputAccent }}
+            >
+              {depleted ? '—' : formatPHP(value)}
+            </p>
+          </div>
+        ) : (
+          <div className="w-full px-1">
+            <input
+              type="number"
+              min="0"
+              value={value || ''}
+              onChange={onChange}
+              placeholder={spec.placeholder}
+              className="w-full text-center bg-slate-50 border rounded-lg text-xs font-mono text-slate-700 placeholder:text-slate-300 px-2 py-1.5 focus:outline-none transition-all"
+              style={{ borderColor: depleted ? '#e2e8f0' : `${spec.inputAccent}35` }}
+              onFocus={(e) => { e.target.style.borderColor = spec.inputAccent; e.target.style.backgroundColor = 'white'; }}
+              onBlur={(e) => { e.target.style.borderColor = depleted ? '#e2e8f0' : `${spec.inputAccent}35`; e.target.style.backgroundColor = ''; }}
+            />
+            <p className="text-[9px] text-slate-400 text-center mt-1 leading-tight px-1">{spec.hint}</p>
           </div>
         )}
-      </div>
-
-      {/* ── Specimen label ─────────────────────────────────────── */}
-      <div className="text-center w-full">
-        <p className="text-[9px] font-mono font-bold tracking-widest uppercase leading-tight"
-          style={{ color: depleted ? '#94a3b8' : spec.inputAccent }}
-        >
-          {spec.specimenId} · {spec.shortName}
-        </p>
-        <p className="text-[9px] text-slate-400 font-mono leading-tight mt-0.5 truncate px-1">
-          {spec.label}
-        </p>
-      </div>
-
-      {/* ── Input field ────────────────────────────────────────── */}
-      <div className="w-full px-1">
-        <input
-          type="number"
-          min="0"
-          value={value || ''}
-          onChange={onChange}
-          placeholder={spec.placeholder}
-          className="w-full text-center bg-slate-50 border rounded-lg text-xs font-mono text-slate-700 placeholder:text-slate-300 px-2 py-1.5 focus:outline-none transition-all"
-          style={{ borderColor: depleted ? '#e2e8f0' : `${spec.inputAccent}35` }}
-          onFocus={(e) => { e.target.style.borderColor = spec.inputAccent; e.target.style.backgroundColor = 'white'; }}
-          onBlur={(e) => { e.target.style.borderColor = depleted ? '#e2e8f0' : `${spec.inputAccent}35`; e.target.style.backgroundColor = ''; }}
-        />
-        <p className="text-[9px] text-slate-400 text-center mt-1 leading-tight px-1">{spec.hint}</p>
       </div>
     </div>
   );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSave, dbStatus }) {
+export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSave, dbStatus, clientView }) {
   const portfolioTotal = SPECIMENS.reduce((s, sp) => s + (specimenData[sp.id] || 0), 0);
   const diagnostic     = getDiagnostic(specimenData);
   const { Icon }       = diagnostic;
@@ -376,6 +402,17 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSa
 
   return (
     <div className="h-full w-full p-4 md:p-8 font-sans flex flex-col md:flex-row gap-6 md:gap-8 items-start justify-center overflow-x-hidden min-w-0">
+
+      {/* ── Print header — hidden on screen, visible when printing ── */}
+      <div className="hidden print:block w-full mb-6 text-center border-b-2 border-stone-300 pb-4">
+        <h1 className="text-2xl font-black text-stone-900">PamilyaSecure Financial Lab Results</h1>
+        <p className="text-sm text-stone-600 mt-1">
+          Kris Jenelyn De Las Peñas · Licensed Microbiologist · Pru Life UK Financial Advisor
+        </p>
+        <p className="text-xs text-stone-400 mt-1 font-mono">
+          Report Date: {today} | Lab ID: {reportId} | fiynkdtswagwbgukkjjb.supabase.co
+        </p>
+      </div>
 
       {/* ── Left Panel: Specimen Intake ───────────────────────────────── */}
       <div className="w-full md:w-[380px] shrink-0 space-y-4">
@@ -418,6 +455,7 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSa
                   key={spec.id}
                   spec={spec}
                   value={specimenData[spec.id] || 0}
+                  clientView={clientView}
                   onChange={(e) =>
                     setSpecimenData((prev) => ({
                       ...prev,
@@ -429,34 +467,47 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData, onSa
             </div>
           </div>
 
-          {/* Total footer + Save */}
-          <div className="border-t border-slate-200 bg-slate-50 px-5 py-3 flex justify-between items-center gap-3">
-            <div className="min-w-0">
-              <p className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">Total Specimen Value</p>
-              <p className="text-[9px] font-mono text-slate-400 mt-0.5">All cultures combined</p>
+          {/* Total footer + Save + Print */}
+          <div className="border-t border-slate-200 bg-slate-50 px-5 py-3 space-y-2">
+            <div className="flex justify-between items-center gap-3">
+              <div className="min-w-0">
+                <p className="text-[9px] font-mono text-slate-400 uppercase tracking-widest">Total Specimen Value</p>
+                <p className="text-[9px] font-mono text-slate-400 mt-0.5">All cultures combined</p>
+              </div>
+              <span className="text-xl font-black text-amber-500 shrink-0">{formatPHP(portfolioTotal)}</span>
             </div>
-            <span className="text-xl font-black text-amber-500 shrink-0">{formatPHP(portfolioTotal)}</span>
-            <button
-              onClick={onSave}
-              disabled={dbStatus === 'saving' || dbStatus === 'loading'}
-              className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all ${
-                dbStatus === 'saved'
-                  ? 'bg-emerald-500 text-white'
-                  : dbStatus === 'error'
-                  ? 'bg-red-100 text-red-600 border border-red-200'
-                  : 'bg-slate-900 text-white hover:bg-slate-700'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {dbStatus === 'saving' && <Loader2 className="w-3 h-3 animate-spin" />}
-              {dbStatus === 'saved'  && <CheckCircle2 className="w-3 h-3" />}
-              {dbStatus === 'error'  && <CloudOff className="w-3 h-3" />}
-              {dbStatus !== 'saving' && dbStatus !== 'saved' && dbStatus !== 'error' && (
-                <Save className="w-3 h-3" />
-              )}
-              {dbStatus === 'saving' ? 'Saving…' :
-               dbStatus === 'saved'  ? 'Saved'   :
-               dbStatus === 'error'  ? 'Error'   : 'Save'}
-            </button>
+            {!clientView && (
+              <div className="no-print flex gap-2">
+                <button
+                  onClick={() => window.print()}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition-all"
+                >
+                  <Download className="w-3 h-3" />
+                  Download Lab Results
+                </button>
+                <button
+                  onClick={onSave}
+                  disabled={dbStatus === 'saving' || dbStatus === 'loading'}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider transition-all ${
+                    dbStatus === 'saved'
+                      ? 'bg-emerald-500 text-white'
+                      : dbStatus === 'error'
+                      ? 'bg-red-100 text-red-600 border border-red-200'
+                      : 'bg-slate-900 text-white hover:bg-slate-700'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {dbStatus === 'saving' && <Loader2 className="w-3 h-3 animate-spin" />}
+                  {dbStatus === 'saved'  && <CheckCircle2 className="w-3 h-3" />}
+                  {dbStatus === 'error'  && <CloudOff className="w-3 h-3" />}
+                  {dbStatus !== 'saving' && dbStatus !== 'saved' && dbStatus !== 'error' && (
+                    <Save className="w-3 h-3" />
+                  )}
+                  {dbStatus === 'saving' ? 'Saving…' :
+                   dbStatus === 'saved'  ? 'Saved'   :
+                   dbStatus === 'error'  ? 'Error'   : 'Save'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
