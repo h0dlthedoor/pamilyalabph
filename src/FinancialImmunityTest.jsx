@@ -71,6 +71,15 @@ const questions = [
   },
 ];
 
+// ─── Score threshold per answer dot ──────────────────────────────────────────
+// Q1: 20/15/10/5  Q2–Q4: 20/12/5  Q5: 20/10/5
+// Using >= 18 for green, >= 10 for amber (covers Q5 middle score of 10)
+function answerDotColor(pts) {
+  if (pts >= 18) return { bg: 'bg-emerald-100', dot: 'bg-emerald-500' };
+  if (pts >= 10) return { bg: 'bg-amber-100',   dot: 'bg-amber-500' };
+  return            { bg: 'bg-red-100',          dot: 'bg-red-500' };
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function FinancialImmunityTest() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -123,17 +132,17 @@ export default function FinancialImmunityTest() {
 
   return (
     <div className="h-full flex items-center justify-center p-4 overflow-x-hidden">
-      <div className="max-w-2xl w-full bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+      <div className="max-w-2xl w-full bg-white rounded-3xl border border-stone-200 shadow-xl overflow-hidden">
 
         {/* Header bar */}
-        <div className="bg-gradient-to-r from-blue-700 to-blue-600 px-8 py-5">
-          <p className="text-blue-200 text-xs font-mono uppercase tracking-widest mb-1">
+        <div className="bg-gradient-to-r from-stone-900 via-stone-800 to-amber-900 px-8 py-5">
+          <p className="text-amber-400 text-xs font-mono uppercase tracking-widest mb-1">
             PamilyaLab · Financial Immunity Test
           </p>
           <h2 className="text-white text-2xl font-bold leading-tight">
             Safe ba ang pamilya mo?
           </h2>
-          <p className="text-blue-200 text-sm mt-1">5 questions · 3 minutes · 100% private</p>
+          <p className="text-stone-300 text-sm mt-1">5 questions · 3 minutes · 100% private</p>
         </div>
 
         <div className="p-6 sm:p-8">
@@ -150,22 +159,22 @@ export default function FinancialImmunityTest() {
                 {/* Step counter + progress */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-xs font-mono text-blue-500 uppercase tracking-widest">
+                    <span className="text-xs font-mono text-amber-600 uppercase tracking-widest">
                       {questions[currentStep].category}
                     </span>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-stone-400">
                       {currentStep + 1} of {questions.length}
                     </span>
                   </div>
                   <div className="flex gap-1.5">
                     {questions.map((_, idx) => (
-                      <div key={idx} className="h-1.5 flex-1 rounded-full bg-slate-200 overflow-hidden">
+                      <div key={idx} className="h-1.5 flex-1 rounded-full bg-stone-200 overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: idx <= currentStep ? '100%' : '0%' }}
                           className={`h-full rounded-full ${
-                            idx < currentStep ? 'bg-blue-400' :
-                            idx === currentStep ? 'bg-blue-600' : ''
+                            idx < currentStep  ? 'bg-amber-400' :
+                            idx === currentStep ? 'bg-amber-600' : ''
                           }`}
                         />
                       </div>
@@ -176,16 +185,16 @@ export default function FinancialImmunityTest() {
                 {/* Question */}
                 <div className="text-center pt-2 pb-2">
                   <div className="flex justify-center">{questions[currentStep].icon}</div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight mb-3">
+                  <h3 className="text-xl sm:text-2xl font-bold text-stone-900 leading-tight mb-3">
                     {questions[currentStep].text}
                   </h3>
-                  <p className="text-sm text-slate-500 max-w-lg mx-auto leading-relaxed">
+                  <p className="text-sm text-stone-500 max-w-lg mx-auto leading-relaxed">
                     {questions[currentStep].subtitle}
                   </p>
                 </div>
 
                 {/* Privacy note */}
-                <p className="text-xs text-slate-400 text-center -mt-2">
+                <p className="text-xs text-stone-400 text-center -mt-2">
                   Your answers help assess your resilience — not judge your choices. 100% private.
                 </p>
 
@@ -195,12 +204,12 @@ export default function FinancialImmunityTest() {
                     <button
                       key={idx}
                       onClick={() => handleAnswer(option.score, option.text)}
-                      className="w-full p-4 text-left rounded-2xl bg-white border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition-all group flex justify-between items-center"
+                      className="w-full p-4 text-left rounded-2xl bg-white border-2 border-stone-200 hover:border-amber-400 hover:bg-amber-50 transition-all group flex justify-between items-center"
                     >
-                      <span className="text-slate-700 font-medium text-sm sm:text-base group-hover:text-blue-800 leading-snug pr-3">
+                      <span className="text-stone-700 font-medium text-sm sm:text-base group-hover:text-amber-900 leading-snug pr-3">
                         {option.text}
                       </span>
-                      <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-blue-500 shrink-0 group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="w-5 h-5 text-stone-300 group-hover:text-amber-500 shrink-0 group-hover:translate-x-1 transition-transform" />
                     </button>
                   ))}
                 </div>
@@ -219,57 +228,56 @@ export default function FinancialImmunityTest() {
                     Score: {score} / {maxScore} ({scorePercent}%)
                   </div>
                   <h3 className={`text-2xl sm:text-3xl font-black ${dx.color} mb-1`}>{dx.label}</h3>
-                  <p className="text-slate-500 text-xs mb-3">{dx.sublabel}</p>
-                  <p className="text-slate-700 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
+                  <p className="text-stone-500 text-xs mb-3">{dx.sublabel}</p>
+                  <p className="text-stone-700 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
                     {dx.text}
                   </p>
                 </div>
 
                 {/* Answer summary */}
                 <div className="space-y-2">
-                  <p className="text-xs font-mono uppercase tracking-widest text-slate-400 mb-3">
+                  <p className="text-xs font-mono uppercase tracking-widest text-stone-400 mb-3">
                     Your Answers
                   </p>
-                  {answers.map((ans, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                      <div className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5 ${
-                        ans.pts >= 18 ? 'bg-emerald-100' : ans.pts >= 12 ? 'bg-amber-100' : 'bg-red-100'
-                      }`}>
-                        <div className={`w-2 h-2 rounded-full ${
-                          ans.pts >= 18 ? 'bg-emerald-500' : ans.pts >= 12 ? 'bg-amber-500' : 'bg-red-500'
-                        }`} />
+                  {answers.map((ans, i) => {
+                    const { bg, dot } = answerDotColor(ans.pts);
+                    return (
+                      <div key={i} className="flex items-start gap-3 p-3 bg-stone-50 rounded-xl border border-stone-200">
+                        <div className={`w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5 ${bg}`}>
+                          <div className={`w-2 h-2 rounded-full ${dot}`} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-stone-400 font-mono">{ans.q}</p>
+                          <p className="text-sm text-stone-700 leading-snug">{ans.a}</p>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-slate-400 font-mono">{ans.q}</p>
-                        <p className="text-sm text-slate-700 leading-snug">{ans.a}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* CTA */}
-                <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 text-center space-y-4">
+                <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center space-y-4">
                   <div className="flex justify-center">
-                    <CheckCircle2 className="w-8 h-8 text-blue-600" />
+                    <CheckCircle2 className="w-8 h-8 text-amber-500" />
                   </div>
                   <div>
-                    <p className="text-blue-900 font-bold text-lg">
+                    <p className="text-stone-900 font-bold text-lg">
                       Gusto mo bang i-close ang mga gaps?
                     </p>
-                    <p className="text-blue-600 text-sm mt-1">
+                    <p className="text-amber-700 text-sm mt-1">
                       Book a free consultation with PamilyaLab — a licensed Pru Life UK advisor will walk you through your next steps.
                     </p>
                   </div>
                   <button
                     type="button"
-                    className="w-full py-4 px-6 rounded-xl font-bold text-slate-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-all duration-200 text-base"
+                    className="cta-pulse w-full py-4 px-6 rounded-xl font-bold text-stone-900 bg-amber-400 hover:bg-amber-300 border border-amber-300 shadow-md hover:shadow-lg transition-all duration-200 text-base"
                   >
                     Simulan ang Free Consultation
                   </button>
                   <button
                     type="button"
                     onClick={handleRestart}
-                    className="w-full py-2.5 px-4 rounded-xl text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                    className="w-full py-2.5 px-4 rounded-xl text-sm text-stone-500 hover:text-stone-700 transition-colors"
                   >
                     Ulit mula simula (Retake)
                   </button>

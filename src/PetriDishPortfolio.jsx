@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Beaker, CheckCircle2, AlertCircle, AlertTriangle, Clock,
 } from 'lucide-react';
+import { formatPHP, formatShort } from './utils';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function arcPath(cx, cy, r, percent) {
@@ -15,15 +16,6 @@ function arcPath(cx, cy, r, percent) {
   const endY  = cy - r * Math.cos(angle);
   const large = percent > 50 ? 1 : 0;
   return `M ${cx} ${cy - r} A ${r} ${r} 0 ${large} 1 ${endX} ${endY}`;
-}
-
-const formatPHP = (n) =>
-  new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 }).format(n || 0);
-
-function formatShort(n) {
-  if (n >= 1_000_000) return `₱${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000)     return `₱${(n / 1_000).toFixed(0)}K`;
-  return n > 0 ? `₱${n}` : '—';
 }
 
 // ─── Node radius (sqrt scale) ─────────────────────────────────────────────────
@@ -269,16 +261,16 @@ export default function PetriDishPortfolio({ specimenData, setSpecimenData }) {
 
       {/* ── Right Panel: Molecular Graph ─────────────────────────────── */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-          <p className="text-xs text-slate-400 font-mono uppercase tracking-widest mb-1">
+        <div className="bg-stone-50 rounded-2xl border border-stone-200 shadow-sm p-4">
+          <p className="text-xs text-stone-400 font-mono uppercase tracking-widest mb-1">
             Portfolio Molecular Map
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-stone-500">
             Node size reflects relative value. Ring shows % toward reference target. Gray nodes are awaiting data.
           </p>
         </div>
 
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-4 aspect-square max-w-[520px] w-full mx-auto">
+        <div className="bg-stone-50 rounded-3xl border border-stone-200 shadow-sm p-4 aspect-square max-w-[520px] w-full mx-auto">
           <svg
             viewBox="0 0 100 100"
             className="w-full h-full"
