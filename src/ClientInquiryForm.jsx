@@ -12,7 +12,7 @@ const INTEREST_OPTIONS = [
   'Investment/VUL',
 ];
 
-export default function ClientInquiryForm() {
+export default function ClientInquiryForm({ immunityData, gapData }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [mobile, setMobile] = useState('');
@@ -52,6 +52,8 @@ export default function ClientInquiryForm() {
       age: Number(age),
       interests,
       message: message.trim() || null,
+      immunity_json: immunityData || null,
+      gap_score: gapData?.overallScore ?? null,
     };
 
     const { error: dbError } = await supabase.from('client_inquiries').insert(payload);
@@ -74,6 +76,8 @@ export default function ClientInquiryForm() {
         age: Number(age),
         interests,
         message: message.trim() || null,
+        immunityData: immunityData || null,
+        gapScore: gapData?.overallScore ?? null,
       },
     }).catch(() => {});
   };
@@ -139,6 +143,34 @@ export default function ClientInquiryForm() {
             </motion.div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Attached data banner */}
+              {(immunityData || gapData) && (
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-2">
+                  <p className="text-xs font-mono text-amber-600 uppercase tracking-widest">Attached to your inquiry</p>
+                  <div className="flex flex-wrap gap-2">
+                    {immunityData && (
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                        immunityData.score >= 75 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                        immunityData.score >= 45 ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                        'bg-red-100 text-red-700 border-red-200'
+                      }`}>
+                        Immunity: {immunityData.score}/{immunityData.maxScore}
+                      </span>
+                    )}
+                    {gapData && (
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                        gapData.overallScore >= 80 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                        gapData.overallScore >= 40 ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                        'bg-red-100 text-red-700 border-red-200'
+                      }`}>
+                        Coverage: {gapData.overallScore}%
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-amber-600">Your results will be shared with your advisor so they can prepare for your discussion.</p>
+                </div>
+              )}
+
               {/* Name row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
