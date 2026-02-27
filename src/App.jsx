@@ -12,6 +12,8 @@ import { supabase } from './lib/supabase';
 export default function App() {
   const [activeTab, setActiveTab] = useState('immunity');
   const [showContact, setShowContact] = useState(false);
+  const [immunityData, setImmunityData] = useState(null);
+  const [gapData, setGapData] = useState(null);
 
   // ── Auth state ────────────────────────────────────────────────────────────
   const [session, setSession] = useState(null);
@@ -231,13 +233,13 @@ export default function App() {
               className="h-full min-h-full py-6"
             >
               {activeTab === 'immunity' && (
-                <FinancialImmunityTest />
+                <FinancialImmunityTest onComplete={setImmunityData} />
               )}
               {activeTab === 'gap' && (
-                <GapCalculator />
+                <GapCalculator onComplete={setGapData} />
               )}
               {activeTab === 'inquire' && (
-                <ClientInquiryForm />
+                <ClientInquiryForm immunityData={immunityData} gapData={gapData} />
               )}
               {activeTab === 'admin' && session && (
                 <AdminPanel session={session} onSignOut={handleSignOut} />
