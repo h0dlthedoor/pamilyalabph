@@ -81,7 +81,7 @@ function answerDotColor(pts) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function FinancialImmunityTest() {
+export default function FinancialImmunityTest({ onComplete }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
@@ -94,8 +94,18 @@ export default function FinancialImmunityTest() {
     setScore(next);
     const newAnswers = [...answers, { q: questions[currentStep].category, a: optionText, pts: points }];
     setAnswers(newAnswers);
-    if (currentStep < questions.length - 1) setCurrentStep(currentStep + 1);
-    else setShowResult(true);
+    if (currentStep < questions.length - 1) {
+      setCurrentStep(currentStep + 1);
+    } else {
+      setShowResult(true);
+      const diagLabel = next >= 75 ? 'High Financial Immunity'
+        : next >= 45 ? 'Moderate Financial Immunity'
+        : 'Low Financial Immunity';
+      const maxScoreVal = questions.reduce((sum, q) => sum + Math.max(...q.options.map(o => o.score)), 0);
+      if (onComplete) {
+        onComplete({ score: next, maxScore: maxScoreVal, diagnosis: diagLabel, answers: newAnswers });
+      }
+    }
   };
 
   const handleRestart = () => {
