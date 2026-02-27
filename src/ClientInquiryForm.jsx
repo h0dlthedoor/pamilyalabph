@@ -182,6 +182,7 @@ export default function ClientInquiryForm({ immunityData, gapData }) {
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       placeholder="Juan"
+                      maxLength={100}
                       className={`${inputCls} pl-10`}
                     />
                   </div>
@@ -193,6 +194,7 @@ export default function ClientInquiryForm({ immunityData, gapData }) {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Dela Cruz"
+                    maxLength={100}
                     className={inputCls}
                   />
                 </div>
@@ -266,6 +268,7 @@ export default function ClientInquiryForm({ immunityData, gapData }) {
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Any questions or anything you'd like to share?"
                     rows={3}
+                    maxLength={2000}
                     className={`${inputCls} pl-10 resize-none`}
                   />
                 </div>

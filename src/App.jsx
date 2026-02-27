@@ -22,6 +22,8 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => setSession(s));
@@ -33,6 +35,14 @@ export default function App() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    // Brute-force protection: lockout after 5 failed attempts
+    if (lockoutUntil && Date.now() < lockoutUntil) {
+      const secs = Math.ceil((lockoutUntil - Date.now()) / 1000);
+      setLoginError(`Too many attempts. Try again in ${secs}s.`);
+      return;
+    }
+
     setLoginError('');
     setLoginLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
@@ -41,8 +51,18 @@ export default function App() {
     });
     setLoginLoading(false);
     if (error) {
-      setLoginError(error.message);
+      const next = loginAttempts + 1;
+      setLoginAttempts(next);
+      if (next >= 5) {
+        const delay = Math.min(30000, 5000 * Math.pow(2, next - 5));
+        setLockoutUntil(Date.now() + delay);
+        setLoginError(`Too many attempts. Try again in ${Math.ceil(delay / 1000)}s.`);
+      } else {
+        setLoginError('Invalid email or password.');
+      }
     } else {
+      setLoginAttempts(0);
+      setLockoutUntil(null);
       setShowLogin(false);
       setLoginEmail('');
       setLoginPassword('');

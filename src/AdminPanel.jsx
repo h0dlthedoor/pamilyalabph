@@ -29,6 +29,28 @@ function formatDate(iso) {
   });
 }
 
+function maskMobile(mobile) {
+  if (!mobile || mobile.length < 6) return mobile;
+  return mobile.slice(0, 4) + ' ••• ' + mobile.slice(-3);
+}
+
+function MobileDisplay({ mobile }) {
+  const [revealed, setRevealed] = useState(false);
+  if (!mobile) return '—';
+  return (
+    <a
+      href={`tel:${mobile}`}
+      className="flex items-center gap-1 hover:text-amber-600"
+      onMouseEnter={() => setRevealed(true)}
+      onMouseLeave={() => setRevealed(false)}
+      onClick={(e) => { e.preventDefault(); setRevealed((r) => !r); }}
+      title="Click to reveal / tap to call"
+    >
+      <Phone className="w-3 h-3" /> {revealed ? mobile : maskMobile(mobile)}
+    </a>
+  );
+}
+
 export default function AdminPanel({ session, onSignOut }) {
   const [activeTab, setActiveTab] = useState('inquiries');
   const [inquiries, setInquiries] = useState([]);
@@ -179,9 +201,7 @@ export default function AdminPanel({ session, onSignOut }) {
                           <td className="py-3 text-stone-500 text-xs">{formatDate(row.created_at)}</td>
                           <td className="py-3 font-medium text-stone-800">{row.first_name} {row.last_name}</td>
                           <td className="py-3 text-stone-600">
-                            <a href={`tel:${row.mobile}`} className="flex items-center gap-1 hover:text-amber-600">
-                              <Phone className="w-3 h-3" /> {row.mobile}
-                            </a>
+                            <MobileDisplay mobile={row.mobile} />
                           </td>
                           <td className="py-3 text-stone-600">{row.age}</td>
                           <td className="py-3">
@@ -266,7 +286,7 @@ export default function AdminPanel({ session, onSignOut }) {
                         <StatusBadge status={row.status} onClick={() => cycleStatus('client_inquiries', row.id, row.status)} />
                       </div>
                       <div className="flex items-center gap-4 text-xs text-stone-500">
-                        <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {row.mobile}</span>
+                        <MobileDisplay mobile={row.mobile} />
                         <span>Age {row.age}</span>
                       </div>
                       <div className="flex flex-wrap gap-1">
@@ -356,11 +376,7 @@ export default function AdminPanel({ session, onSignOut }) {
                           <td className="py-3 text-stone-500 text-xs">{formatDate(row.created_at)}</td>
                           <td className="py-3 font-medium text-stone-800">{row.first_name || '—'}</td>
                           <td className="py-3 text-stone-600">
-                            {row.mobile ? (
-                              <a href={`tel:${row.mobile}`} className="flex items-center gap-1 hover:text-amber-600">
-                                <Phone className="w-3 h-3" /> {row.mobile}
-                              </a>
-                            ) : '—'}
+                            <MobileDisplay mobile={row.mobile} />
                           </td>
                           <td className="py-3">
                             <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
@@ -389,7 +405,7 @@ export default function AdminPanel({ session, onSignOut }) {
                         <StatusBadge status={row.status || 'new'} onClick={() => cycleStatus('quiz_leads', row.id, row.status || 'new')} />
                       </div>
                       <div className="flex items-center gap-4 text-xs text-stone-500">
-                        {row.mobile && <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {row.mobile}</span>}
+                        {row.mobile && <MobileDisplay mobile={row.mobile} />}
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                           row.score >= 80 ? 'bg-emerald-100 text-emerald-700' :
                           row.score >= 50 ? 'bg-amber-100 text-amber-700' :
