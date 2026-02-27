@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, LogOut, Phone, Calendar, Loader2 } from 'lucide-react';
+import { RefreshCw, LogOut, Phone, Calendar, Loader2, ChevronDown } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
 const STATUS_CYCLE = ['new', 'contacted', 'closed'];
@@ -36,6 +36,7 @@ export default function AdminPanel({ session, onSignOut }) {
   const [loading, setLoading] = useState(true);
 
   const [refreshKey, setRefreshKey] = useState(0);
+  const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -167,12 +168,14 @@ export default function AdminPanel({ session, onSignOut }) {
                         <th className="py-2.5 text-xs font-mono text-stone-400 uppercase tracking-wider">Mobile</th>
                         <th className="py-2.5 text-xs font-mono text-stone-400 uppercase tracking-wider">Age</th>
                         <th className="py-2.5 text-xs font-mono text-stone-400 uppercase tracking-wider">Interests</th>
+                        <th className="py-2.5 text-xs font-mono text-stone-400 uppercase tracking-wider">Results</th>
                         <th className="py-2.5 text-xs font-mono text-stone-400 uppercase tracking-wider">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {inquiries.map((row) => (
-                        <tr key={row.id} className="border-b border-stone-100 hover:bg-stone-50">
+                        <React.Fragment key={row.id}>
+                        <tr className="border-b border-stone-100 hover:bg-stone-50">
                           <td className="py-3 text-stone-500 text-xs">{formatDate(row.created_at)}</td>
                           <td className="py-3 font-medium text-stone-800">{row.first_name} {row.last_name}</td>
                           <td className="py-3 text-stone-600">
@@ -191,9 +194,64 @@ export default function AdminPanel({ session, onSignOut }) {
                             </div>
                           </td>
                           <td className="py-3">
+                            <div className="flex flex-wrap gap-1">
+                              {row.immunity_json && (
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold border cursor-pointer hover:scale-105 transition-transform ${
+                                    row.immunity_json.score >= 75 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                                    row.immunity_json.score >= 45 ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                    'bg-red-100 text-red-700 border-red-200'
+                                  }`}
+                                >
+                                  Quiz: {row.immunity_json.score}/{row.immunity_json.maxScore}
+                                </button>
+                              )}
+                              {row.gap_score != null && (
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                  row.gap_score >= 80 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                                  row.gap_score >= 40 ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                  'bg-red-100 text-red-700 border-red-200'
+                                }`}>
+                                  Gap: {row.gap_score}%
+                                </span>
+                              )}
+                              {!row.immunity_json && row.gap_score == null && (
+                                <span className="text-[10px] text-stone-300">&mdash;</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3">
                             <StatusBadge status={row.status} onClick={() => cycleStatus('client_inquiries', row.id, row.status)} />
                           </td>
                         </tr>
+                        {expandedId === row.id && row.immunity_json?.answers && (
+                          <tr>
+                            <td colSpan={7} className="p-0">
+                              <div className="bg-stone-50 px-6 py-4 border-b border-stone-200">
+                                <p className="text-[10px] font-mono text-stone-400 uppercase tracking-widest mb-2">Immunity Test Answers</p>
+                                <div className="space-y-1.5">
+                                  {row.immunity_json.answers.map((ans, i) => (
+                                    <div key={i} className="flex items-start gap-2 text-xs">
+                                      <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                                        ans.pts >= 15 ? 'bg-emerald-500' : ans.pts >= 10 ? 'bg-amber-500' : 'bg-red-500'
+                                      }`} />
+                                      <div>
+                                        <span className="text-stone-400 font-mono">{ans.q}:</span>{' '}
+                                        <span className="text-stone-700">{ans.a}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                                <p className="text-[10px] text-stone-400 mt-2">
+                                  Diagnosis: <span className="font-bold">{row.immunity_json.diagnosis}</span>
+                                </p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        </React.Fragment>
                       ))}
                     </tbody>
                   </table>
@@ -218,6 +276,52 @@ export default function AdminPanel({ session, onSignOut }) {
                           </span>
                         ))}
                       </div>
+                      {(row.immunity_json || row.gap_score != null) && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {row.immunity_json && (
+                            <button
+                              type="button"
+                              onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                row.immunity_json.score >= 75 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                                row.immunity_json.score >= 45 ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                'bg-red-100 text-red-700 border-red-200'
+                              }`}
+                            >
+                              Quiz: {row.immunity_json.score}/{row.immunity_json.maxScore}
+                              <ChevronDown className={`inline w-3 h-3 ml-0.5 transition-transform ${expandedId === row.id ? 'rotate-180' : ''}`} />
+                            </button>
+                          )}
+                          {row.gap_score != null && (
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                              row.gap_score >= 80 ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                              row.gap_score >= 40 ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                              'bg-red-100 text-red-700 border-red-200'
+                            }`}>
+                              Gap: {row.gap_score}%
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {expandedId === row.id && row.immunity_json?.answers && (
+                        <div className="bg-white rounded-xl border border-stone-200 p-3 space-y-1.5">
+                          <p className="text-[10px] font-mono text-stone-400 uppercase tracking-widest">Immunity Answers</p>
+                          {row.immunity_json.answers.map((ans, i) => (
+                            <div key={i} className="flex items-start gap-2 text-xs">
+                              <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                                ans.pts >= 15 ? 'bg-emerald-500' : ans.pts >= 10 ? 'bg-amber-500' : 'bg-red-500'
+                              }`} />
+                              <div>
+                                <span className="text-stone-400 font-mono">{ans.q}:</span>{' '}
+                                <span className="text-stone-700">{ans.a}</span>
+                              </div>
+                            </div>
+                          ))}
+                          <p className="text-[10px] text-stone-400 mt-1">
+                            Diagnosis: <span className="font-bold">{row.immunity_json.diagnosis}</span>
+                          </p>
+                        </div>
+                      )}
                       {row.message && (
                         <p className="text-xs text-stone-500 italic">&ldquo;{row.message}&rdquo;</p>
                       )}
