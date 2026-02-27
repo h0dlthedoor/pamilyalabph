@@ -42,7 +42,7 @@ const STEPS = [
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function GapCalculator() {
+export default function GapCalculator({ onComplete }) {
   // Step state
   const [step, setStep] = useState(0); // 0-2 = wizard, 3 = results
 
@@ -90,7 +90,15 @@ export default function GapCalculator() {
   const sortedPillars = [...pillars].sort((a, b) => a.pct - b.pct);
 
   // ── Navigation ──────────────────────────────────────────────────────────────
-  const goNext = () => setStep((s) => Math.min(s + 1, 3));
+  const goNext = () => {
+    setStep((s) => {
+      const next = Math.min(s + 1, 3);
+      if (next === 3 && onComplete) {
+        onComplete({ overallScore });
+      }
+      return next;
+    });
+  };
   const goBack = () => setStep((s) => Math.max(s - 1, 0));
   const restart = () => setStep(0);
 
