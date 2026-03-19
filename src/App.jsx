@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import Lenis from 'lenis';
+import 'lenis/dist/lenis.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Beaker, UserPlus, Settings, Lock, X, Loader2, ShieldPlus } from 'lucide-react';
+import { Activity, Beaker, UserPlus, Settings, Lock, X, Loader2, ShieldPlus, Moon, Sun } from 'lucide-react';
 import { playChime } from './sounds';
 import FinancialImmunityTest from './FinancialImmunityTest';
 import GapCalculator from './GapCalculator';
@@ -24,6 +26,35 @@ export default function App() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState(null);
+
+  // ── Dark mode ───────────────────────────────────────────────────────────
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (saved === 'dark' || (!saved && prefersDark)) {
+      setDarkMode(true);
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('theme', next ? 'dark' : 'light');
+  };
+
+  // ── Lenis smooth scroll ──────────────────────────────────────────────────
+  useEffect(() => {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
+    const lenis = new Lenis({ lerp: 0.1, duration: 1.2, smoothWheel: true });
+    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
+    return () => lenis.destroy();
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => setSession(s));
@@ -219,6 +250,11 @@ export default function App() {
                   </button>
                 ))}
               </div>
+
+              {/* Dark mode toggle */}
+              <button onClick={toggleDarkMode} className="p-2 rounded-full hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors" aria-label="Toggle dark mode">
+                {darkMode ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-stone-600" />}
+              </button>
 
               {/* Auth button */}
               {!session ? (

@@ -6,6 +6,8 @@ import {
   Download, Loader2,
 } from 'lucide-react';
 import { downloadCardImage } from './shareCard';
+import { haptic } from './sounds';
+import LabMascot from './components/LabMascot';
 
 // ─── Question bank — English, PH-context aware ─────────────────────────────
 const questions = [
@@ -87,25 +89,31 @@ export default function FinancialImmunityTest({ onComplete }) {
   const [showResult, setShowResult] = useState(false);
   const [answers, setAnswers] = useState([]);
   const [generating, setGenerating] = useState(false);
+  const [mascotState, setMascotState] = useState('idle');
   const cardRef = useRef(null);
 
   const handleAnswer = (points, optionText) => {
-    const next = score + points;
-    setScore(next);
-    const newAnswers = [...answers, { q: questions[currentStep].category, a: optionText, pts: points }];
-    setAnswers(newAnswers);
-    if (currentStep < questions.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      setShowResult(true);
-      const diagLabel = next >= 75 ? 'High Financial Immunity'
-        : next >= 45 ? 'Moderate Financial Immunity'
-        : 'Low Financial Immunity';
-      const maxScoreVal = questions.reduce((sum, q) => sum + Math.max(...q.options.map(o => o.score)), 0);
-      if (onComplete) {
-        onComplete({ score: next, maxScore: maxScoreVal, diagnosis: diagLabel, answers: newAnswers });
+    setMascotState('thinking');
+    setTimeout(() => {
+      const next = score + points;
+      setScore(next);
+      const newAnswers = [...answers, { q: questions[currentStep].category, a: optionText, pts: points }];
+      setAnswers(newAnswers);
+      if (currentStep < questions.length - 1) {
+        setCurrentStep(currentStep + 1);
+        setMascotState('idle');
+      } else {
+        setShowResult(true);
+        setMascotState(next >= 75 ? 'celebrate' : next < 45 ? 'concern' : 'idle');
+        const diagLabel = next >= 75 ? 'High Financial Immunity'
+          : next >= 45 ? 'Moderate Financial Immunity'
+          : 'Low Financial Immunity';
+        const maxScoreVal = questions.reduce((sum, q) => sum + Math.max(...q.options.map(o => o.score)), 0);
+        if (onComplete) {
+          onComplete({ score: next, maxScore: maxScoreVal, diagnosis: diagLabel, answers: newAnswers });
+        }
       }
-    }
+    }, 300);
   };
 
   const handleRestart = () => {
@@ -113,6 +121,7 @@ export default function FinancialImmunityTest({ onComplete }) {
     setScore(0);
     setShowResult(false);
     setAnswers([]);
+    setMascotState('idle');
   };
 
   const handleDownloadCard = async () => {
@@ -204,7 +213,10 @@ export default function FinancialImmunityTest({ onComplete }) {
                   </div>
                 </div>
 
-                {/* Question */}
+                {/* Mascot + Question */}
+                <div className="flex justify-center mb-2">
+                  <LabMascot state={mascotState} />
+                </div>
                 <div className="text-center pt-2 pb-2">
                   <div className="flex justify-center">{questions[currentStep].icon}</div>
                   <h3 className="text-xl sm:text-2xl font-bold text-stone-900 leading-tight mb-3">
@@ -225,7 +237,7 @@ export default function FinancialImmunityTest({ onComplete }) {
                   {questions[currentStep].options.map((option, idx) => (
                     <button
                       key={idx}
-                      onClick={() => handleAnswer(option.score, option.text)}
+                      onClick={() => { haptic(); handleAnswer(option.score, option.text); }}
                       className="w-full p-4 text-left rounded-2xl bg-white border-2 border-stone-200 hover:border-amber-400 hover:bg-amber-50 transition-colors group flex justify-between items-center"
                     >
                       <span className="text-stone-700 font-medium text-sm sm:text-base group-hover:text-amber-900 leading-snug pr-3">
@@ -243,6 +255,11 @@ export default function FinancialImmunityTest({ onComplete }) {
                 animate={{ opacity: 1 }}
                 className="space-y-6"
               >
+                {/* Mascot on result screen */}
+                <div className="flex justify-center">
+                  <LabMascot state={mascotState} />
+                </div>
+
                 {/* Score badge with spring bounce */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8, y: 20 }}

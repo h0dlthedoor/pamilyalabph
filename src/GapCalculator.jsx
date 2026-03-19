@@ -9,6 +9,7 @@ import {
   calcLife, calcHealth, calcEmergency, calcEducation, calcRetirement,
   calcOverallScore, EDUCATION_COSTS,
 } from './gapCalculations';
+import AIRecommendation from './components/AIRecommendation';
 
 // ─── NumericInput — local string state prevents "0 remains" on clear ─────────
 function NumericInput({ value, onChange, placeholder, className, name }) {
@@ -471,6 +472,19 @@ export default function GapCalculator({ onComplete }) {
                     </motion.div>
                   );
                 })}
+
+                {/* AI Recommendation */}
+                <AIRecommendation
+                  gapData={{
+                    overallScore,
+                    pillars: sortedPillars.map(p => ({
+                      name: p.label,
+                      coverage: p.pct,
+                      gap: p.gap,
+                    })),
+                  }}
+                  immunityData={null}
+                />
 
                 {/* Restart */}
                 <button type="button" onClick={restart}

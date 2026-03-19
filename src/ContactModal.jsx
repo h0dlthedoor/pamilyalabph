@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, FlaskConical } from 'lucide-react';
-import { playChime } from './sounds';
+import { playChime, haptic } from './sounds';
 
 export default function ContactModal({ isOpen, onClose }) {
   useEffect(() => {
@@ -12,12 +12,14 @@ export default function ContactModal({ isOpen, onClose }) {
   }, [isOpen, onClose]);
 
   const handleViber = () => {
+    haptic();
     playChime();
     window.location.href = 'viber://chat?number=%2B639156373238&text=Hi%20Kris!%20I\'d%20like%20to%20book%20a%20free%20consultation.';
     setTimeout(() => window.open('https://viber.click/639156373238', '_blank'), 1500);
   };
 
   const handleFacebook = () => {
+    haptic();
     playChime();
   };
 

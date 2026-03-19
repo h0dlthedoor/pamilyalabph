@@ -1,5 +1,12 @@
 // ─── Web Audio API sound effects — zero bundle impact, no audio files ────────
 
+/** Haptic feedback — short vibration pulse on supported devices */
+export function haptic(ms = 8) {
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    navigator.vibrate(ms);
+  }
+}
+
 /** Soft two-tone chime (880Hz → 1320Hz, 0.3s) for button presses */
 export function playChime() {
   try {

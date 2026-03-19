@@ -124,6 +124,18 @@ button, a, input, label, select {
   .aspect-square { aspect-ratio: auto !important; max-height: 400px !important; }
 }
 
+/* ─── Dark Mode ──────────────────────────────────────────────────────────── */
+.dark body {
+  background: #0d1117;
+  color: #e6edf3;
+}
+.dark body::before {
+  background:
+    radial-gradient(ellipse at 15% 40%, rgba(251,191,36,0.03) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(249,115,22,0.02) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 90%, rgba(245,158,11,0.015) 0%, transparent 50%);
+}
+
 /* ─── Accessibility: Reduced Motion ─────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -143,4 +155,4 @@ button, a, input, label, select {
 }
 
 /* ─── Scroll Behavior ──────────────────────────────────────────────────── */
-html { overscroll-behavior: none; }
+html { overscroll-behavior-y: none; }

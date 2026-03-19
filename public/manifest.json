@@ -1,0 +1,18 @@
+{
+  "name": "PamilyaSecurePH — Financial Health Laboratory",
+  "short_name": "PamilyaSecure",
+  "description": "Check your family's financial immunity and coverage gaps",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1c1917",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
